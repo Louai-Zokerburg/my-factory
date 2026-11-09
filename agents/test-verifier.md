@@ -20,7 +20,7 @@ The caller says which. If unclear, use **verify**.
 **reproduce** (before a bug fix): write the smallest test that fails because of the bug. Run it and confirm it fails for the right reason (the assertion about the bug, not a setup error). Return the test path, the command, and the failing line.
 
 **verify** (after a change):
-1. List what the change does from the diff (`git diff main...HEAD`, plus `git diff HEAD`).
+1. List what the change does from the diff (`git fetch -q origin main` then `git diff origin/main...HEAD`, plus `git diff HEAD`).
 2. For each behaviour, find an existing test that covers it or write one, following the repo's layout:
    - web: `packages/web/test/<mirrored path>.test.ts`, import via `@/`; run `cd packages/web && npm test -- <file>`.
    - server API: `setupTestEnvironment()` + `createTestContext(app)`; run the narrowest matching `npm run test-api` / package test command.

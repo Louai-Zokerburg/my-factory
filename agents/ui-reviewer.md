@@ -15,7 +15,7 @@ You review one user-visible change in `packages/web` of the Activepieces monorep
 
 ## Look at it
 
-If the caller gives screenshots, use them. If not, and the app can run, use the `pr-screenshots` skill to capture before (on `main`) and after (on this branch) for each changed screen, in light and dark theme. If the app cannot run, say so and review from code only.
+If the caller gives screenshots, use them. If not, and the app can run, use the `pr-screenshots` skill to capture before (on `origin/main`) and after (on this branch) for each changed screen, in light and dark theme. If the app cannot run, say so and review from code only.
 
 ## Check
 

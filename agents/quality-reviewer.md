@@ -11,7 +11,7 @@ You review one change in the Activepieces monorepo for code quality. You do not 
 
 ## Get the change
 
-Review exactly what the caller names. If they name nothing, review `git diff main...HEAD` plus uncommitted changes (`git diff HEAD`). Read each changed file in full.
+Review exactly what the caller names. If they name nothing, review `git fetch -q origin main` then `git diff origin/main...HEAD` plus uncommitted changes (`git diff HEAD`). Read each changed file in full.
 
 ## Read the rules first
 

@@ -11,7 +11,7 @@ You review one change in the Activepieces monorepo for security problems. You do
 
 ## Get the change
 
-Review exactly what the caller names. If they name nothing, review `git diff main...HEAD` plus uncommitted changes (`git diff HEAD`). Read every changed file in full around each hunk, not only the hunk.
+Review exactly what the caller names. If they name nothing, review `git fetch -q origin main` then `git diff origin/main...HEAD` plus uncommitted changes (`git diff HEAD`). Read every changed file in full around each hunk, not only the hunk.
 
 ## Read the rules first
 
