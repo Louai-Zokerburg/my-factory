@@ -1,0 +1,16 @@
+{
+  "$schema": "https://www.schemastore.org/claude-code-marketplace.json",
+  "name": "my-factory",
+  "description": "Louai's personal software factory.",
+  "owner": {
+    "name": "Louai"
+  },
+  "plugins": [
+    {
+      "name": "my-factory",
+      "description": "Personal reviewer agents, workflows and roadmap agent.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
