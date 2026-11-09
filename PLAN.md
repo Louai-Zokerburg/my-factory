@@ -55,7 +55,7 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 | Phase | What | Estimate | Status |
 |---|---|---|---|
 | 0 | Plugin repo, Remote Control, notifications, tested from phone | 30 min | done (notifications: manual toggle in `/config`) |
-| 1 | 4 reviewer agents + small-bug workflow + roadmap routine | 3 to 4 h | agents done, tested on fix/ai-usage-platform-filter |
+| 1 | 4 reviewer agents + small-bug workflow + roadmap routine | 3 to 4 h | agents done + small-bug workflow (mock-tested; live test pending) |
 | 2 | Cloud environment for activepieces (setup script) | half a day, riskiest | |
 | 3 | colleague-review, support-ticket, ui-update workflows | half a day | |
 | 4 | big-feature workflow | 1 day + tuning | |
