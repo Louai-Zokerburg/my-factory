@@ -33,7 +33,17 @@ Reviewers overstate. Before anything goes in the review, check every blocker and
 
 ## 5. Draft, show, post
 
-Show the draft to Louai first. Post only after a yes, with `gh api -X POST repos/activepieces/activepieces/pulls/<n>/reviews` (`commit_id` = PR head SHA, `event` = `REQUEST_CHANGES` if there are blockers, otherwise `COMMENT`). Put an inline comment on each blocker whose line is inside the diff; GitHub rejects inline comments on lines the PR didn't touch, so mention those in the body. Afterwards remove the worktree.
+Show the draft to Louai first. Post only after a yes, with `gh api -X POST repos/activepieces/activepieces/pulls/<n>/reviews` (`commit_id` = PR head SHA, `event` = `REQUEST_CHANGES` if there are blockers, otherwise `COMMENT`). Put an inline comment on each blocker whose line is inside the diff; GitHub rejects inline comments on lines the PR didn't touch, so mention those in the body.
+
+## 6. Clean up right after posting
+
+As soon as the review POST succeeds, in the same turn, delete the review worktree and say so in the reply:
+
+```sh
+git -C <activepieces repo> worktree remove --force <repo>-wt/review-pr-<n>
+```
+
+The review worktree is never reused: a re-review starts from a fresh checkout of the new head. If Louai decides not to post, ask once whether to delete it too.
 
 ### Tone
 
