@@ -56,6 +56,6 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 |---|---|---|---|
 | 0 | Plugin repo, Remote Control, notifications, tested from phone | 30 min | done (notifications: manual toggle in `/config`) |
 | 1 | 4 reviewer agents + small-bug workflow + roadmap routine | 3 to 4 h | agents + small-bug done (live dry run on AI-150 passed); roadmap routine blocked on GitHub app access |
-| 2 | Cloud environment for activepieces (setup script) | half a day, riskiest | script tested (232 s, 380 tests pass); env creation + org app pending |
+| 2 | Cloud environment for activepieces (setup script) | half a day, riskiest | done: live cloud run 380/380 tests pass (install 3 s, build 54 s); follow-up: session uses node 22 not 24 |
 | 3 | colleague-review, support-ticket, ui-update workflows | half a day | built + mock-tested; live runs pending |
 | 4 | big-feature workflow | 1 day + tuning | built + mock-tested (plan / split / build stages); live run pending |
