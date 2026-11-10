@@ -13,7 +13,7 @@ Environments can only be created in the web UI.
    REDISMS_DISABLE_POSTINSTALL=1
    REDISMS_SYSTEM_BINARY=/usr/bin/redis-server
    ```
-5. Setup script: paste the contents of `setup-activepieces.sh`.
+5. Setup script: paste the contents of `setup-activepieces.sh`. After any change to that file, paste it again: the environment keeps its own copy, and editing it rebuilds the cache.
 6. Save.
 
 ## What the session still does itself
@@ -32,3 +32,9 @@ build 36 s, then `test/integration/ce/flows`: 26 files, 380 tests passed in 203 
 - `activepieces/activepieces` is public, so cloud sessions can clone and read it.
 - Pushing branches and opening PRs needs the Claude GitHub App on the activepieces org (asked an org owner on 2026-11-10).
 - `Louai-Zokerburg/my-factory`: app installed on the personal account.
+
+## Node version
+
+The cloud image ships `/opt/node22` and `/opt/node24`, and its fixed PATH puts `/opt/node22/bin` before
+`/usr/bin`, so a Node installed anywhere else is shadowed. The setup script points `/opt/node22` at
+`/opt/node24` and re-installs the image's Node 22 global packages under Node 24.

@@ -23,16 +23,40 @@ apt-get update -qq >/dev/null
 apt-get install -y -qq redis-server build-essential >/dev/null
 systemctl disable --now redis-server >/dev/null 2>&1 || true
 
-if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]')" != "$NODE_MAJOR" ]; then
-  log "installing node $NODE_MAJOR"
+# The cloud image ships /opt/node22 and /opt/node24, and its fixed PATH puts
+# /opt/node22/bin ahead of /usr/bin. A Node installed anywhere else is shadowed,
+# so point /opt/node22 at /opt/node24 and carry over the old global packages.
+node_major() { node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo none; }
+
+if [ -d "/opt/node${NODE_MAJOR}" ] && [ -d /opt/node22 ] && [ ! -L /opt/node22 ] && [ "$NODE_MAJOR" != 22 ]; then
+  log "pointing /opt/node22 at /opt/node${NODE_MAJOR}"
+  OLD_GLOBALS=$(ls /opt/node22/lib/node_modules 2>/dev/null | grep -v -E '^(npm|corepack)$' || true)
+  rm -rf /opt/node22.orig
+  mv /opt/node22 /opt/node22.orig
+  ln -s "/opt/node${NODE_MAJOR}" /opt/node22
+  hash -r
+  for pkg in $OLD_GLOBALS; do
+    log "re-installing global $pkg"
+    npm install -g --silent "$pkg" >/dev/null 2>&1 || log "could not re-install $pkg; skipping"
+  done
+fi
+
+if [ "$(node_major)" != "$NODE_MAJOR" ]; then
+  log "installing node $NODE_MAJOR from nodesource"
   curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - >/dev/null
   apt-get install -y -qq nodejs >/dev/null
+  hash -r
 fi
-log "node $(node --version)"
+log "node $(node --version) at $(command -v node)"
+if [ "$(node_major)" != "$NODE_MAJOR" ]; then
+  log "ERROR: node on PATH is $(node --version), expected v${NODE_MAJOR}"
+  exit 1
+fi
 
 if ! command -v bun >/dev/null || [ "$(bun --version)" != "$BUN_VERSION" ]; then
   log "installing bun $BUN_VERSION"
   npm install -g --silent "bun@$BUN_VERSION"
+  hash -r
 fi
 log "bun $(bun --version)"
 
