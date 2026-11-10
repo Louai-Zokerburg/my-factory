@@ -28,6 +28,7 @@ The caller says which. If unclear, use **verify**.
 3. If the caller gave Linear acceptance criteria, check each bullet ends with ``E2E: `<test title>` `` or `no-e2e: <reason>`, and that each named E2E test exists.
 4. Run the narrowest test commands that cover the change, then `npm run lint-dev`.
 5. If a needed service (Postgres, Redis) is missing, say so; do not fake a pass.
+6. In a fresh checkout (cloud session or new worktree), install and build the internal packages before the first test, or every API test fails with `Failed to resolve entry for package "@activepieces/..."`: `bun install --frozen-lockfile && npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only` (about 40 s).
 
 ## Output
 
