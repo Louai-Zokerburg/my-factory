@@ -59,3 +59,4 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 | 2 | Cloud environment for activepieces (setup script) | half a day, riskiest | done: live cloud run 380/380 tests pass (install 3 s, build 54 s); node 24 fixed and verified in cloud |
 | 3 | colleague-review, support-ticket, ui-update workflows | half a day | built + mock-tested; live runs pending |
 | 4 | big-feature workflow | 1 day + tuning | built + mock-tested (plan / split / build stages); live run pending |
+| 5 | Daily use: USAGE.md, `factory` help skill, Remote Control service installer | 1 h | done; service install is Louai's to run; cloud sessions still lack the plugin (decision pending) |

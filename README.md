@@ -14,7 +14,7 @@ After editing files here: `claude plugin marketplace update my-factory && claude
 
 ## Check it loaded
 
-In any session: "factory status".
+In any session: "factory help" (what to type) or "factory status" (what is installed). Full guide: [USAGE.md](USAGE.md).
 
 ## Running workflows headless
 
