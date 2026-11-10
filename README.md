@@ -6,11 +6,14 @@ See [PLAN.md](PLAN.md) for the design and rollout.
 ## Install (user scope)
 
 ```sh
-claude plugin marketplace add ~/work/my-factory
+claude plugin marketplace add Louai-Zokerburg/my-factory
 claude plugin install my-factory@my-factory --scope user
+box setup   # sends it to Box, so agents you start with `box new` get it
 ```
 
-After editing files here: `claude plugin marketplace update my-factory && claude plugin update my-factory@my-factory`.
+The marketplace is the GitHub repo, not this folder: Box only syncs plugins whose marketplace lives in `~/.claude`.
+After editing files here: commit and push, then
+`claude plugin marketplace update my-factory && claude plugin update my-factory@my-factory && box setup`.
 
 ## Check it loaded
 

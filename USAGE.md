@@ -64,6 +64,12 @@ Keep two or three runs going at once at most. Each one gets its own worktree, so
 | Factory workflows and agents | **Yes** | **Not yet.** Cloud sessions don't have the plugin: a session's safety check blocks installing it ("Code from External"), and adding it to the setup script is your decision |
 | Best for | Every workflow in this guide | The Friday digest; plain sessions ("fix this test", "explain this module") with the laptop off |
 
+## On Box
+
+`box setup` has sent the plugin to Box (Settings → Synced setup shows `my-factory`). Agents **you** start get it: `box new -n ai-150`, then type the same lines from the table. Box adds what the laptop lacks: real Postgres and Redis, production logs (ClickHouse) and the read-only production replica.
+
+Box does **not** give it to machines made with *New machine* on the dashboard, or to agents started by an alert, webhook or `@box` mention. Those run the team's recipes.
+
 ## When something goes wrong
 
 - **A run stops with `needs-human`:** it couldn't finish a must-fix after 2 rounds. The summary lists exactly what's left.
@@ -83,5 +89,5 @@ To stop it: `systemctl --user disable --now claude-remote-control`.
 
 ## Change the factory
 
-- **Edit an agent or workflow in this repo**, then run `claude plugin marketplace update my-factory && claude plugin update my-factory@my-factory` and start a new session.
+- **Edit an agent or workflow in this repo**, commit and push, then run `claude plugin marketplace update my-factory && claude plugin update my-factory@my-factory && box setup` and start a new session. The plugin installs from GitHub, so unpushed edits don't reach the laptop or Box.
 - **Something a reviewer always misses** belongs in that agent's checklist. **Something every agent should know about activepieces** belongs in the team's `brain/`, not here.
