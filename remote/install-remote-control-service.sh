@@ -5,7 +5,19 @@
 #   systemctl --user disable --now claude-remote-control && rm ~/.config/systemd/user/claude-remote-control.service
 set -euo pipefail
 
-CLAUDE_BIN=$(command -v claude)
+# Use the real binary, not a shell wrapper: ~/.local/bin/claude runs
+# `mise x claude -- claude`, which under systemd's PATH finds the wrapper again
+# and loops forever. mise's `latest` symlink follows claude updates.
+MISE_LATEST=$HOME/.local/share/mise/installs/claude/latest/claude
+if [ -x "$MISE_LATEST" ]; then
+  CLAUDE_BIN=$MISE_LATEST
+else
+  CLAUDE_BIN=$(command -v claude)
+fi
+if ! file -L "$CLAUDE_BIN" | grep -q ELF; then
+  echo "error: $CLAUDE_BIN is not the claude binary (a wrapper script?); set CLAUDE_BIN to the real binary" >&2
+  exit 1
+fi
 REPO=${1:-$HOME/work/activepieces}
 UNIT=$HOME/.config/systemd/user/claude-remote-control.service
 
@@ -29,6 +41,7 @@ WantedBy=default.target
 EOF
 
 systemctl --user daemon-reload
-systemctl --user enable --now claude-remote-control.service
+systemctl --user enable claude-remote-control.service
+systemctl --user restart claude-remote-control.service
 sleep 10
 systemctl --user --no-pager status claude-remote-control.service | head -5
