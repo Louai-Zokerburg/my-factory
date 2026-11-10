@@ -65,4 +65,22 @@ rm -rf "$WARM_DIR"
 git clone -q --depth 1 https://github.com/activepieces/activepieces "$WARM_DIR"
 (cd "$WARM_DIR" && bun install --frozen-lockfile --ignore-scripts >/dev/null)
 rm -rf "$WARM_DIR"
+
+# Install Louai's my-factory plugin (workflows + reviewer agents) for the session.
+# It is a private repo; if the clone fails, the session still works, just without it.
+# The cloud copy refreshes whenever this environment's cache rebuilds.
+FACTORY_DIR=/opt/my-factory
+log "installing the my-factory plugin"
+rm -rf "$FACTORY_DIR"
+if git clone -q --depth 1 https://github.com/Louai-Zokerburg/my-factory "$FACTORY_DIR" 2>/tmp/factory-clone.err; then
+  CLAUDE=$(command -v claude || ls /opt/claude-code/bin/claude 2>/dev/null || true)
+  if [ -n "$CLAUDE" ] && "$CLAUDE" plugin marketplace add "$FACTORY_DIR" >/dev/null 2>&1 \
+      && "$CLAUDE" plugin install my-factory@my-factory --scope user >/dev/null 2>&1; then
+    log "my-factory $(grep -o '"version": *"[^"]*"' "$FACTORY_DIR/.claude-plugin/plugin.json") installed"
+  else
+    log "WARNING: my-factory cloned but plugin install failed (claude=${CLAUDE:-not found})"
+  fi
+else
+  log "WARNING: could not clone my-factory: $(tail -1 /tmp/factory-clone.err)"
+fi
 log "done"

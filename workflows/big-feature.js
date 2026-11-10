@@ -13,8 +13,6 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : {}
-const REPO = input.repo || '/home/louai/work/activepieces'
-const FACTORY = input.factory || '/home/louai/work/my-factory'
 const TICKET = String(input.ticket || '').trim()
 const STAGE = input.stage || 'plan'
 const MAX_REVIEW_ROUNDS = 2
@@ -24,6 +22,30 @@ if (!TICKET) {
 }
 if (!['plan', 'split', 'build'].includes(STAGE)) {
   return { status: 'blocked', reason: `Unknown stage "${STAGE}". Use plan, split or build.` }
+}
+
+const WHERE = {
+  type: 'object',
+  properties: { ok: { type: 'boolean' }, repo: { type: 'string' }, factory: { type: 'string' }, error: { type: 'string' } },
+  required: ['ok', 'repo', 'factory', 'error'],
+}
+const where = input.repo
+  ? { ok: true, repo: input.repo, factory: input.factory || '', error: '' }
+  : await agent(
+    [
+      'Find two checkouts and return their absolute paths. Run read-only commands; change nothing.',
+      '1. repo: the MAIN checkout of the activepieces repo (origin github.com/activepieces/activepieces). If the current directory is inside it, repo is the parent directory of `git rev-parse --path-format=absolute --git-common-dir` (this gives the main checkout even from a worktree). Otherwise use the first of /home/louai/work/activepieces and /home/user/activepieces that is that repo. If none, ok=false with the error.',
+      '2. factory: the first of /home/louai/work/my-factory, /home/user/my-factory and /opt/my-factory that contains .claude-plugin/plugin.json; empty string if none.',
+    ].join('\n'),
+    { label: 'locate', schema: WHERE, effort: 'low' },
+  )
+if (!where || !where.ok) {
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+}
+const REPO = where.repo
+const FACTORY = where.factory
+if (!FACTORY) {
+  return { status: 'blocked', stage: 'locate', reason: 'big-feature keeps its state in a my-factory checkout and none was found. In a cloud session, add the my-factory repo when you start the session.' }
 }
 
 const FDIR = `${FACTORY}/features/${TICKET.toLowerCase()}`

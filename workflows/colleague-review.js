@@ -12,13 +12,32 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : { pr: args }
-const REPO = input.repo || '/home/louai/work/activepieces'
 const PR = String(input.pr || '').replace(/.*\/pull\//, '').replace(/\D/g, '')
 const PUSH = Boolean(input.push)
 
 if (!PR) {
   return { status: 'blocked', reason: 'Pass args.pr (a PR number or URL).' }
 }
+
+const WHERE = {
+  type: 'object',
+  properties: { ok: { type: 'boolean' }, repo: { type: 'string' }, factory: { type: 'string' }, error: { type: 'string' } },
+  required: ['ok', 'repo', 'factory', 'error'],
+}
+const where = input.repo
+  ? { ok: true, repo: input.repo, factory: input.factory || '', error: '' }
+  : await agent(
+    [
+      'Find two checkouts and return their absolute paths. Run read-only commands; change nothing.',
+      '1. repo: the MAIN checkout of the activepieces repo (origin github.com/activepieces/activepieces). If the current directory is inside it, repo is the parent directory of `git rev-parse --path-format=absolute --git-common-dir` (this gives the main checkout even from a worktree). Otherwise use the first of /home/louai/work/activepieces and /home/user/activepieces that is that repo. If none, ok=false with the error.',
+      '2. factory: the first of /home/louai/work/my-factory, /home/user/my-factory and /opt/my-factory that contains .claude-plugin/plugin.json; empty string if none.',
+    ].join('\n'),
+    { label: 'locate', schema: WHERE, effort: 'low' },
+  )
+if (!where || !where.ok) {
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+}
+const REPO = where.repo
 
 const WORKDIR_NOTE = (dir) =>
   `Work only inside ${dir}. Your shell's working directory resets between commands, so start every Bash command with \`cd ${dir} && \`. Use absolute paths for Read/Edit/Write.`
