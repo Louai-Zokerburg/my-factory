@@ -36,7 +36,7 @@ Type these on your phone (Claude app → Code → the `factory` session) or in a
 | Small bug ticket | `run the small-bug workflow on AI-150` | A failing test, the fix, 3 reviews, a **draft PR**, and a Linear comment | Click through, then mark the PR ready |
 | Ticket, cause unknown | `run support-ticket on GIT-1234` | Root cause with evidence, a skeptic's check, a **draft** ticket reply | Post the reply; add `fix: true` to chain into small-bug |
 | Comments on your PR | `run colleague-review on PR 17339` | Clear fixes committed locally, a **draft reply** for every other thread | Say "push and post" |
-| Review someone's PR | `review PR 14895` | 4 reviewers, one combined review, the serious claims checked | Say "post it" |
+| Review someone's PR | `review PR 14895` | 4 reviewers, serious claims checked, one friendly review with Blockers and Non-blockers (skill `review-pr`) | Say "post it" |
 | UI change | `run ui-update on AI-200` | Implementation, UI and quality review, screenshots, a **draft PR** with a gallery | Mark the PR ready |
 | Big feature | `run big-feature on ENG-1401` | Research and a PRD in `features/eng-1401/prd.md` | Approve the PRD |
 | Big feature, step 2 | `run big-feature on ENG-1401 stage split` | AC and Decisions on the ticket, a PR plan in `prs.md` | Approve the plan |

@@ -18,7 +18,7 @@ Pick the one workflow that fits from the "What to type" table. Say which and why
 - A small bug in an existing feature → `my-factory:small-bug`
 - A ticket whose cause is unknown → `my-factory:support-ticket` first
 - Comments on Louai's own PR → `my-factory:colleague-review`
-- Someone else's PR to review → run the four reviewer agents (security, quality, ui if web changed, test-verifier with no file edits) against the PR's base branch, then draft one review; post nothing without a yes
+- Someone else's PR to review → the `my-factory:review-pr` skill (four reviewers, check their claims, friendly Blockers / Non-blockers review, post only after a yes)
 - A visual change in packages/web → `my-factory:ui-update`
 - More than one PR of work → `my-factory:big-feature`, stage `plan` first
 
