@@ -26,7 +26,7 @@ The caller says which. If unclear, use **verify**.
    - server API: `setupTestEnvironment()` + `createTestContext(app)`; run the narrowest matching `npm run test-api` / package test command.
    - engine and shared: `npm run test-unit` filtered to the package.
 3. If the caller gave Linear acceptance criteria, check each bullet ends with ``E2E: `<test title>` `` or `no-e2e: <reason>`, and that each named E2E test exists.
-4. Run the narrowest test commands that cover the change, then `npm run lint-dev`.
+4. Run the narrowest test commands that cover the change, then `npm run lint-dev`, then the typecheck of every touched package, **test files included**: vitest does not typecheck, but CI does. For `packages/web` that is `cd packages/web && npm run typecheck` (both `tsconfig.app.json` and `tsconfig.spec.json`); it needs the internal packages built first (`npx turbo run build --filter=web^... --output-logs=errors-only`), or every file fails with unrelated errors.
 5. If a needed service (Postgres, Redis) is missing, say so; do not fake a pass.
 6. In a fresh checkout (cloud session or new worktree), install and build the internal packages before the first test, or every API test fails with `Failed to resolve entry for package "@activepieces/..."`: `bun install --frozen-lockfile && npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only` (about 40 s).
 
@@ -39,6 +39,7 @@ Tests added: <paths or "none">
 Commands run:
 - <command> → <pass | fail: first failing line>
 Lint: <pass | fail: first error>
+Typecheck: <pass | fail: first error | n/a>
 E2E markers: <ok | missing: which criteria | n/a>
 Uncovered behaviour: <what still has no test, or "none">
 ```

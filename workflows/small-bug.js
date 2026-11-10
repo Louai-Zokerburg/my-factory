@@ -177,7 +177,7 @@ let fix = await agent(
     `Fix this bug with the smallest correct change. ${WORKDIR_NOTE(WT)}`,
     bugBrief,
     `A failing test already proves it: ${repro.testPath}. Run it with: ${repro.command}`,
-    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev`, then commit with a conventional message (e.g. `fix(api): ...`), ending with the line `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Return the commit hash.',
+    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev` and the typecheck of each touched package (for web: `cd packages/web && npm run typecheck`, which also checks test files), then commit with a conventional message (e.g. `fix(api): ...`), ending with the line `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Return the commit hash.',
   ].join('\n\n'),
   { label: 'fix', schema: FIX },
 )
