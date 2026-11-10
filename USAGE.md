@@ -48,7 +48,7 @@ Add `dryRun: true` to small-bug, ui-update or big-feature build to stop before a
 ## A normal day
 
 1. **Morning, about 2 minutes, on your phone:** look at the Code tab. Overnight runs show as sessions, and draft PRs show in the GitHub app.
-2. **When a ticket lands:** type the matching line from the table, then put the phone down. A small bug takes about 10 to 20 minutes, and Opus costs a few dollars per run.
+2. **When a ticket lands:** type the matching line from the table, then put the phone down. A small bug takes about 10 to 20 minutes. Runs use your Claude subscription's usage limits, not extra money; the `total_cost_usd` a headless run prints is a list-price estimate of its size.
 3. **When a run finishes:** read its summary and do the one thing in the "You decide" column.
 4. **Friday:** read the digest's **Do first** line.
 
