@@ -15,7 +15,7 @@ You review one user-visible change in `packages/web` of the Activepieces monorep
 
 ## Look at it
 
-If the caller gives screenshots, use them. If not, and the app can run, use the `pr-screenshots` skill to capture before (on `origin/main`) and after (on this branch) for each changed screen, in light and dark theme. If the app cannot run, say so and review from code only.
+If the caller gives screenshots (the Verify phase saves them), use them first. If you need more, and the caller allows running the app: take the app lock (`bash <factory>/scripts/app-lock.sh acquire <run id>`), boot the checkout with `ap-dev up <edition> --detach --replace && ap-dev wait`, run `bash <factory>/scripts/ensure-chrome.sh`, and follow `<factory>/skills/ext-browser-devtools/SKILL.md` to capture each changed screen in light and dark theme and to check the console and network. Always `ap-dev stop` and release the lock after. For a before shot on `origin/main`, the `pr-screenshots` skill still works. If the app cannot run, say so and review from code only.
 
 ## Check
 

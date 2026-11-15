@@ -231,6 +231,8 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
   reviews = (await parallel([
     () => agent(`${task} Capture before (origin/main) and after screenshots with the pr-screenshots skill and list their paths in screenshots.`, { label: `ui r${round}`, phase: 'Review', agentType: 'my-factory:ui-reviewer', schema: REVIEW }),
     () => agent(task, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
+    () => agent(task, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
+    () => agent(`Mode: verify. ${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
   ])).filter(Boolean)
   mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]
   screenshots = [...(verify ? verify.screenshots : []), ...reviews.flatMap((r) => r.screenshots || [])]

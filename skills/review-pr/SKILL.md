@@ -5,6 +5,10 @@ description: Review a teammate's Activepieces pull request the way Louai does - 
 
 # Review a teammate's PR
 
+## 0. Plan first
+
+This skill runs after the plan session (`factory review-pr <n>`), which writes `~/work/plans/tasks/review-<n>/plan.md` with Louai's focus, depth and tone (5+ questions). Read it first; if it is missing, stop and run the plan session.
+
 ## 1. Look at it
 
 - `gh api repos/activepieces/activepieces/pulls/<n>` for title, author, base branch and size, plus `.../pulls/<n>/files` and the body. Use `gh api` with a `timeout`; `gh pr view` can hang.
@@ -24,7 +28,7 @@ cd <repo>-wt/review-pr-<n> && bun install --frozen-lockfile \
 Start these at once, each pointed at the worktree and `git diff origin/<base>...HEAD`, each told to edit nothing:
 - `my-factory:security-reviewer`: add the PR's specific risks to the prompt (billing, auth, abuse, races).
 - `my-factory:quality-reviewer`: also ask it to check the description matches the code.
-- `my-factory:ui-reviewer`: only when `packages/web` changed. Code-only unless asked to run the app.
+- `my-factory:ui-reviewer`: only when `packages/web` changed. Code-only unless the plan says to run their branch; then it boots the worktree with `ap-dev` under the app lock (`<factory>/scripts/app-lock.sh`) and checks the pages with `<factory>/skills/ext-browser-devtools/SKILL.md`.
 - `my-factory:test-verifier`: read-only verify. Run the tests the author claims, eslint without `--fix`, and list untested behaviour.
 
 ## 4. Check before you trust

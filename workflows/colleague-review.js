@@ -201,6 +201,7 @@ if (clearFixes.length > 0) {
     review = (await parallel([
       () => agent(task, { label: 'quality', phase: 'Check', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
       () => agent(task, { label: 'security', phase: 'Check', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
+      () => agent(`Mode: verify. ${task} Run the tests that cover the files this commit touches, plus lint and typecheck.`, { label: 'tests', phase: 'Check', agentType: 'my-factory:test-verifier', schema: REVIEW }),
     ])).filter(Boolean)
   }
 }

@@ -24,6 +24,7 @@ const REPLIES = {
   'read ticket': () => ({ ok: true, error: '', title: 't', report: 'r', edition: 'cloud', isPublic: true, hasLogsOrRunIds: false }),
   investigate: () => ({ verdict: 'bug', rootCause: 'rc', evidence: ['x.ts:1'], files: ['x.ts'], confidence: 'high', workaround: '', smallFix: true }),
   skeptic: () => ({ refuted: false, why: '', betterExplanation: '' }),
+  'reproduce in app': () => ({ reproduced: true, how: 'curl /v1/flows', evidence: ['500 on POST'], notes: '' }),
   'draft comment': () => ({ comment: 'c', posted: false }),
   plan: () => ({ proceed: true, blockReason: '', ticketKey: 'AI-9', title: 't', slug: 'new-chip', screens: ['/x'], files: ['f.tsx'], reuse: ['Badge'], steps: ['s'], isPublicTicket: false }),
   build: () => BUILD,

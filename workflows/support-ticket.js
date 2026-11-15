@@ -147,6 +147,28 @@ if (!finding) {
   return { status: 'blocked', stage: 'investigate', reason: 'investigate agent failed' }
 }
 
+phase('Reproduce')
+const REPRO_APP = {
+  type: 'object',
+  properties: { reproduced: { type: 'boolean' }, how: { type: 'string' }, evidence: { type: 'array', items: { type: 'string' } }, notes: { type: 'string' } },
+  required: ['reproduced', 'how', 'evidence', 'notes'],
+}
+const FACTORY_DIR = where.factory || '/home/louai/work/my-factory'
+const repro = finding.verdict === 'bug' || finding.verdict === 'cannot-reproduce'
+  ? await agent(
+    [
+      PLAN_NOTE,
+      `Reproduce this support report in the running Activepieces app, without editing any file in ${REPO}. Follow ${FACTORY_DIR}/skills/ext-diagnose/SKILL.md step 1 to 2 only.`,
+      `Ticket ${TICKET}: ${ticket.title}\n\n${ticket.report}`,
+      `Suspected cause: ${finding.rootCause}`,
+      `App: take the lock \`bash ${FACTORY_DIR}/scripts/app-lock.sh acquire support-${TICKET}\`, then \`cd ${REPO} && ap-dev up ${planFile.edition} --detach --replace && ap-dev wait\`. Drive it with curl (token from \`ap-dev login --json\`) or the browser (\`bash ${FACTORY_DIR}/scripts/ensure-chrome.sh\`, then ${FACTORY_DIR}/skills/ext-browser-devtools/SKILL.md). Throwaway scripts go in /tmp, never in the repo.`,
+      `Always finish with \`cd ${REPO} && ap-dev stop\` and \`bash ${FACTORY_DIR}/scripts/app-lock.sh release support-${TICKET}\`, even on failure.`,
+      'reproduced=true only if you saw the reported symptom yourself; evidence lists the exact commands/steps and the output you saw (secrets redacted).',
+    ].join('\n\n'),
+    { label: 'reproduce in app', phase: 'Reproduce', schema: REPRO_APP },
+  )
+  : null
+
 phase('Challenge')
 const challenge = await agent(
   [
@@ -154,6 +176,7 @@ const challenge = await agent(
     `Report: ${ticket.report}`,
     `Verdict: ${finding.verdict}. Root cause: ${finding.rootCause}`,
     `Evidence:\n${finding.evidence.map((e) => `- ${e}`).join('\n')}`,
+    repro ? `In-app reproduction: ${repro.reproduced ? 'reproduced' : 'NOT reproduced'} — ${repro.how}` : 'No in-app reproduction was attempted.',
     'Check each evidence item is real and actually explains the reported symptom. Set refuted=true if the cause does not explain the symptom, the evidence does not hold, or a simpler explanation fits better (give it in betterExplanation). When unsure, refuted=true.',
   ].join('\n\n'),
   { label: 'skeptic', schema: CHALLENGE },
@@ -168,6 +191,7 @@ const draft = await agent(
     `Verdict: ${finding.verdict} (confidence ${finding.confidence}${survived ? '' : ', and a skeptic disputed it'}).`,
     `Root cause: ${finding.rootCause}`,
     `Evidence: ${finding.evidence.join('; ')}`,
+    repro ? `Reproduced in the running app: ${repro.reproduced ? `yes, ${repro.how}` : 'no, it did not show locally'}.` : '',
     survived ? '' : `Skeptic: ${challenge ? `${challenge.why} ${challenge.betterExplanation}` : 'challenge agent failed'}. Present the cause as unconfirmed and list what would settle it.`,
     finding.workaround ? `Workaround: ${finding.workaround}` : '',
     'Format: one-line summary, then Cause, Evidence (file:line), Workaround or Next step. Short and plain.',
@@ -177,7 +201,7 @@ const draft = await agent(
 
 let fixRun = null
 if (input.fix && finding.verdict === 'bug' && finding.smallFix && survived) {
-  fixRun = await workflow('my-factory:small-bug', { ticket: TICKET, repo: REPO, dryRun: Boolean(input.dryRun) })
+  fixRun = await workflow('my-factory:small-bug', { ticket: TICKET, repo: REPO, planPath: input.planPath, dryRun: Boolean(input.dryRun) })
 }
 
 return {
