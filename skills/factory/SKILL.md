@@ -5,25 +5,26 @@ description: Louai's my-factory help desk - what the plugin can do, which recipe
 
 # Factory
 
-The cheat sheet lives in `${CLAUDE_PLUGIN_ROOT}/USAGE.md`. Read it before answering.
+The cheat sheet lives in `${CLAUDE_PLUGIN_ROOT}/USAGE.md`. Read it before answering. The factory runs from Louai's laptop only.
 
-## If asked for help or "what can it do"
+## "factory <recipe> <target>"
+Load the `plan-session` skill and follow it. Every recipe starts there: it grills Louai, writes the plan file, and launches the run on "go".
 
-Reply with the "What to type" table from USAGE.md, unchanged, and one line: "Tell me the ticket or PR and I'll pick the workflow."
+## "factory help" / "what can it do"
+Reply with the "What to type" table from USAGE.md, unchanged, and one line: "Tell me the ticket or PR and I'll pick the recipe."
 
-## If the person describes a task
+## Louai describes a task and says "factory"
+Pick one recipe, say why in one line, show the exact `factory ...` line, and ask "Start the plan session?":
+- A small bug in an existing feature → small-bug
+- A ticket whose cause is unknown → support-ticket
+- Comments on Louai's own PR → colleague-review
+- Someone else's PR → review-pr
+- A visual change in packages/web → ui-update
+- More than one PR of work → big-feature
 
-Pick the one workflow that fits from the "What to type" table. Say which and why in one line, show the exact args, and ask "Run it?" before starting. Use these rules:
+## "factory status"
+1. List `${CLAUDE_PLUGIN_ROOT}/agents`, `workflows`, `skills` and `scripts`.
+2. Run `bash ${CLAUDE_PLUGIN_ROOT}/scripts/app-lock.sh status` and `ap-dev status`.
+3. Reply in at most 6 lines: plugin version, recipes, the app lock holder, whether a stack is running.
 
-- A small bug in an existing feature → `my-factory:small-bug`
-- A ticket whose cause is unknown → `my-factory:support-ticket` first
-- Comments on Louai's own PR → `my-factory:colleague-review`
-- Someone else's PR to review → the `my-factory:review-pr` skill (four reviewers, check their claims, friendly Blockers / Non-blockers review, post only after a yes)
-- A visual change in packages/web → `my-factory:ui-update`
-- More than one PR of work → `my-factory:big-feature`, stage `plan` first
-
-## If asked for status
-
-1. List `${CLAUDE_PLUGIN_ROOT}/agents`, `${CLAUDE_PLUGIN_ROOT}/workflows` and `${CLAUDE_PLUGIN_ROOT}/skills`.
-2. Read the Rollout table in `${CLAUDE_PLUGIN_ROOT}/PLAN.md`.
-3. Reply in at most 6 lines: plugin version, the agent / workflow / skill names, and anything in Rollout not marked done.
+End every answer with 1–3 numbered next actions.

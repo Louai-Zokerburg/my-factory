@@ -60,3 +60,4 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 | 3 | colleague-review, support-ticket, ui-update workflows | half a day | built + mock-tested; live runs pending |
 | 4 | big-feature workflow | 1 day + tuning | built + mock-tested (plan / split / build stages); live run pending |
 | 5 | Daily use: USAGE.md, `factory` help skill, Remote Control service installer | 1 h | done; service install is Louai's to run; cloud sessions still lack the plugin (decision pending) |
+| 6 | 0.11.0 upgrade (plan: ~/work/plans/factory-upgrade/): explicit-only triggers, plan session + question minimums, big-feature one PR per run in ~/work/plans, app lock + in-app verify (ap-dev, Playwright, DevTools), reviewer gaps closed, next actions on every ending, laptop-first docs | 1 day | built + mock-tested (26 scenarios); live runs pending |
