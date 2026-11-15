@@ -11,10 +11,16 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : { ticket: args }
+const RERUN = `factory support-ticket ${input.ticket || '<ticket>'}`
+const NEXT_STEPS = {
+  blocked: ['Read `reason` above and fix what it names.', `Then rerun: ${RERUN}`],
+  needsHuman: (wt) => [`Read mustFix above and fix it in ${wt}, or tell me which finding is wrong.`, `Then rerun: ${RERUN}`],
+  dryRun: (wt) => [`Look at the change: cd ${wt} && git diff origin/main...HEAD --stat`, `Happy? Rerun without dryRun to push and open the draft PR: ${RERUN}`],
+}
 const TICKET = String(input.ticket || '').trim()
 
 if (!TICKET) {
-  return { status: 'blocked', reason: 'Pass args.ticket, e.g. "GIT-1234".' }
+  return { status: 'blocked', reason: 'Pass args.ticket, e.g. "GIT-1234".', nextActions: NEXT_STEPS.blocked }
 }
 
 const MIN_QUESTIONS = 7
@@ -38,7 +44,7 @@ const where = input.repo
     { label: 'locate', schema: WHERE, effort: 'low' },
   )
 if (!where || !where.ok) {
-  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed', nextActions: NEXT_STEPS.blocked }
 }
 const REPO = where.repo
 
@@ -127,7 +133,7 @@ const ticket = await agent(
   { label: 'read ticket', schema: READ, effort: 'low' },
 )
 if (!ticket || !ticket.ok) {
-  return { status: 'blocked', stage: 'read', reason: ticket ? ticket.error : 'read agent failed' }
+  return { status: 'blocked', stage: 'read', reason: ticket ? ticket.error : 'read agent failed', nextActions: NEXT_STEPS.blocked }
 }
 
 phase('Investigate')
@@ -144,7 +150,7 @@ const finding = await agent(
   { label: 'investigate', schema: FINDING },
 )
 if (!finding) {
-  return { status: 'blocked', stage: 'investigate', reason: 'investigate agent failed' }
+  return { status: 'blocked', stage: 'investigate', reason: 'investigate agent failed', nextActions: NEXT_STEPS.blocked }
 }
 
 phase('Reproduce')
@@ -218,4 +224,9 @@ return {
   commentPosted: draft ? draft.posted : false,
   suggestFix: finding.verdict === 'bug' && finding.smallFix && survived && !fixRun ? `Run my-factory:small-bug on ${TICKET}` : '',
   fixRun,
+  nextActions: [
+    `Read the draft reply above (≈3 min)${draft && draft.posted ? '; it is already posted' : ''}.`,
+    draft && draft.posted ? 'Watch the ticket for the reporter\'s answer.' : `Post it on ${TICKET} in Linear, or tell me what to change.`,
+    finding.verdict === 'bug' && !fixRun ? `If you want the fix: factory small-bug ${TICKET}` : 'Nothing else to run.',
+  ],
 }

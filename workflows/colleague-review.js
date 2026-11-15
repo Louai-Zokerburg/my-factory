@@ -12,11 +12,17 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : { pr: args }
+const RERUN = `factory colleague-review ${`PR ${input.pr || '<n>'}`}`
+const NEXT_STEPS = {
+  blocked: ['Read `reason` above and fix what it names.', `Then rerun: ${RERUN}`],
+  needsHuman: (wt) => [`Read mustFix above and fix it in ${wt}, or tell me which finding is wrong.`, `Then rerun: ${RERUN}`],
+  dryRun: (wt) => [`Look at the change: cd ${wt} && git diff origin/main...HEAD --stat`, `Happy? Rerun without dryRun to push and open the draft PR: ${RERUN}`],
+}
 const PR = String(input.pr || '').replace(/.*\/pull\//, '').replace(/\D/g, '')
 const PUSH = Boolean(input.push)
 
 if (!PR) {
-  return { status: 'blocked', reason: 'Pass args.pr (a PR number or URL).' }
+  return { status: 'blocked', reason: 'Pass args.pr (a PR number or URL).', nextActions: NEXT_STEPS.blocked }
 }
 
 const MIN_QUESTIONS = 5
@@ -40,7 +46,7 @@ const where = input.repo
     { label: 'locate', schema: WHERE, effort: 'low' },
   )
 if (!where || !where.ok) {
-  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed', nextActions: NEXT_STEPS.blocked }
 }
 const REPO = where.repo
 
@@ -151,10 +157,10 @@ const collected = await agent(
 )
 
 if (!collected || !collected.ok) {
-  return { status: 'blocked', stage: 'collect', reason: collected ? collected.error : 'collect agent failed' }
+  return { status: 'blocked', stage: 'collect', reason: collected ? collected.error : 'collect agent failed', nextActions: NEXT_STEPS.blocked }
 }
 if (collected.threads.length === 0) {
-  return { status: 'done', pr: PR, message: 'No unresolved review threads.' }
+  return { status: 'done', pr: PR, message: 'No unresolved review threads.', nextActions: ['Nothing to answer: check the PR for new comments later.'] }
 }
 const WT = collected.worktreePath
 log(`${collected.threads.length} unresolved threads on PR #${PR}`)
@@ -235,4 +241,7 @@ return {
     draftReply: t.draftReply,
   })),
   nextStep: 'Show Louai each draftReply. Post a reply only after he approves it: `gh api repos/{owner}/{repo}/pulls/<pr>/comments/<commentId>/replies -f body=...`.',
+  nextActions: mustFix.length > 0
+    ? NEXT_STEPS.needsHuman(WT)
+    : [`Look at the fix commit: cd ${WT} && git show --stat HEAD (≈2 min).`, 'Read the draft replies above.', pushed ? 'Say "post the replies" when they read right.' : 'Say "push and post" when the commit and replies look right.'],
 }

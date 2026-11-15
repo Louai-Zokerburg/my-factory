@@ -12,11 +12,17 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : { description: args }
+const RERUN = `factory ui-update ${input.ticket || input.description || '<ticket>'}`
+const NEXT_STEPS = {
+  blocked: ['Read `reason` above and fix what it names.', `Then rerun: ${RERUN}`],
+  needsHuman: (wt) => [`Read mustFix above and fix it in ${wt}, or tell me which finding is wrong.`, `Then rerun: ${RERUN}`],
+  dryRun: (wt) => [`Look at the change: cd ${wt} && git diff origin/main...HEAD --stat`, `Happy? Rerun without dryRun to push and open the draft PR: ${RERUN}`],
+}
 const DRY_RUN = Boolean(input.dryRun)
 const MAX_REVIEW_ROUNDS = 2
 
 if (!input.ticket && !input.description) {
-  return { status: 'blocked', reason: 'Pass args.ticket (e.g. "AI-123") and/or args.description.' }
+  return { status: 'blocked', reason: 'Pass args.ticket (e.g. "AI-123") and/or args.description.', nextActions: NEXT_STEPS.blocked }
 }
 
 const MIN_QUESTIONS = 5
@@ -40,7 +46,7 @@ const where = input.repo
     { label: 'locate', schema: WHERE, effort: 'low' },
   )
 if (!where || !where.ok) {
-  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed', nextActions: NEXT_STEPS.blocked }
 }
 const REPO = where.repo
 
@@ -150,7 +156,7 @@ const plan = await agent(
   { label: 'plan', schema: PLAN },
 )
 if (!plan || !plan.proceed) {
-  return { status: 'blocked', stage: 'plan', reason: plan ? plan.blockReason : 'plan agent failed', plan }
+  return { status: 'blocked', stage: 'plan', reason: plan ? plan.blockReason : 'plan agent failed', plan, nextActions: NEXT_STEPS.blocked }
 }
 
 phase('Setup')
@@ -165,7 +171,7 @@ const setup = await agent(
   { label: 'worktree', schema: SETUP, effort: 'low' },
 )
 if (!setup || !setup.ok) {
-  return { status: 'blocked', stage: 'setup', reason: setup ? setup.error : 'setup agent failed', plan }
+  return { status: 'blocked', stage: 'setup', reason: setup ? setup.error : 'setup agent failed', plan, nextActions: NEXT_STEPS.blocked }
 }
 const WT = setup.worktreePath
 
@@ -190,7 +196,7 @@ let build = await agent(
   { label: 'build', schema: BUILD },
 )
 if (!build || !build.done) {
-  return { status: 'blocked', stage: 'build', reason: build ? build.notes : 'build agent failed', worktreePath: WT, branch }
+  return { status: 'blocked', stage: 'build', reason: build ? build.notes : 'build agent failed', worktreePath: WT, branch, nextActions: NEXT_STEPS.blocked }
 }
 
 phase('Verify')
@@ -251,10 +257,10 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
 
 const otherNotes = reviews.flatMap((r) => r.other)
 if (mustFix.length > 0) {
-  return { status: 'needs-human', stage: 'review', worktreePath: WT, branch, mustFix, screenshots, otherNotes }
+  return { status: 'needs-human', stage: 'review', worktreePath: WT, branch, mustFix, screenshots, otherNotes, nextActions: NEXT_STEPS.needsHuman(WT) }
 }
 if (DRY_RUN) {
-  return { status: 'dry-run-complete', worktreePath: WT, branch, summary: build.summary, screenshots, otherNotes }
+  return { status: 'dry-run-complete', worktreePath: WT, branch, summary: build.summary, screenshots, otherNotes, nextActions: NEXT_STEPS.dryRun(WT) }
 }
 
 phase('Ship')
@@ -279,4 +285,9 @@ return {
   worktreePath: WT,
   summary: build.summary,
   otherNotes,
+  nextActions: [
+    `Open the draft PR ${ship ? ship.prUrl : '(see above)'} and its screenshot gallery (≈5 min).`,
+    'Mark it ready for review, or tell me what to change.',
+    'Optional: say "brag about it" for an omg post.',
+  ],
 }

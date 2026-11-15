@@ -66,8 +66,9 @@ async function run(name, args, opts, expect) {
   const pipeline = async (items, ...stages) => Promise.all(items.map(async (item, i) => { let r = item; for (const s of stages) r = await s(r, item, i); return r }))
   const workflow = async (n) => { calls.push(`WF:${n}`); return { status: 'done' } }
   const result = await new AsyncFunction('agent', 'parallel', 'pipeline', 'phase', 'log', 'args', 'budget', 'workflow', load(name))(agent, parallel, pipeline, () => {}, () => {}, args, {}, workflow)
-  const ok = result.status === expect && (opts.check ? opts.check(calls, result) : true)
-  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name.padEnd(16)} ${String(JSON.stringify(args)).slice(0, 44).padEnd(46)} ${result.status.padEnd(17)} ${calls.join(',')}`)
+  const hasNext = Array.isArray(result.nextActions) && result.nextActions.length > 0 && result.nextActions.every((a) => typeof a === 'string' && a.length > 0)
+  const ok = result.status === expect && hasNext && (opts.check ? opts.check(calls, result) : true)
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${name.padEnd(16)} ${String(JSON.stringify(args)).slice(0, 44).padEnd(46)} ${result.status.padEnd(17)}${hasNext ? '' : '[no nextActions] '} ${calls.join(',')}`)
   return ok
 }
 

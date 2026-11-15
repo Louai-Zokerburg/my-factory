@@ -13,6 +13,12 @@ export const meta = {
 }
 
 const input = typeof args === 'object' && args !== null ? args : {}
+const RERUN = `factory big-feature ${`${input.ticket || '<ticket>'}${input.stage ? ` stage ${input.stage}` : ''}${input.pr ? ` PR ${input.pr}` : ''}`}`
+const NEXT_STEPS = {
+  blocked: ['Read `reason` above and fix what it names.', `Then rerun: ${RERUN}`],
+  needsHuman: (wt) => [`Read mustFix above and fix it in ${wt}, or tell me which finding is wrong.`, `Then rerun: ${RERUN}`],
+  dryRun: (wt) => [`Look at the change: cd ${wt} && git diff origin/main...HEAD --stat`, `Happy? Rerun without dryRun to push and open the draft PR: ${RERUN}`],
+}
 const TICKET = String(input.ticket || '').trim()
 const STAGE = input.stage || 'plan'
 const PLAN_PATH = String(input.planPath || '')
@@ -21,10 +27,10 @@ const MIN_QUESTIONS = STAGE === 'plan' ? 30 : 5
 const MAX_REVIEW_ROUNDS = 2
 
 if (!TICKET) {
-  return { status: 'blocked', reason: 'Pass args.ticket (e.g. "ENG-1401") and args.stage ("plan" | "split" | "build").' }
+  return { status: 'blocked', reason: 'Pass args.ticket (e.g. "ENG-1401") and args.stage ("plan" | "split" | "build").', nextActions: NEXT_STEPS.blocked }
 }
 if (!['plan', 'split', 'build'].includes(STAGE)) {
-  return { status: 'blocked', reason: `Unknown stage "${STAGE}". Use plan, split or build.` }
+  return { status: 'blocked', reason: `Unknown stage "${STAGE}". Use plan, split or build.`, nextActions: NEXT_STEPS.blocked }
 }
 
 if (['plan', 'split', 'build'].includes(STAGE) && !PLAN_PATH) {
@@ -51,7 +57,7 @@ const where = input.repo
     { label: 'locate', schema: WHERE, effort: 'low' },
   )
 if (!where || !where.ok) {
-  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed' }
+  return { status: 'blocked', stage: 'locate', reason: where ? where.error : 'locate agent failed', nextActions: NEXT_STEPS.blocked }
 }
 const REPO = where.repo
 const PLAN_CHECK = {
@@ -113,7 +119,7 @@ if (STAGE === 'plan') {
   const notes = research.filter(Boolean)
   const gate = notes.find((n) => n.lens === 'linear')
   if (!gate) {
-    return { status: 'blocked', stage: 'plan', reason: 'Linear research failed; cannot confirm the ticket may be built.' }
+    return { status: 'blocked', stage: 'plan', reason: 'Linear research failed; cannot confirm the ticket may be built.', nextActions: NEXT_STEPS.blocked }
   }
 
   phase('PRD')
@@ -129,7 +135,7 @@ if (STAGE === 'plan') {
   ].filter(Boolean).join('\n\n')
   const draft = await agent(PRD_PROMPT(''), { label: 'draft PRD', phase: 'PRD', schema: DONE })
   if (!draft || !draft.ok) {
-    return { status: 'blocked', stage: 'plan', reason: draft ? draft.error : 'PRD agent failed' }
+    return { status: 'blocked', stage: 'plan', reason: draft ? draft.error : 'PRD agent failed', nextActions: NEXT_STEPS.blocked }
   }
   const critique = await agent(
     `Critique the PRD at ${FDIR}/master-plan.md for ${TICKET} as a skeptical staff engineer on Activepieces. ${AT(REPO)} Check against the code in ${REPO}: missing acceptance criteria, untestable criteria, wrong assumptions about existing code, edition or self-hosting gaps, migration or rollback risk, multi-tenant isolation, scope that should be cut. ok=true only if nothing important is missing.`,
@@ -195,7 +201,7 @@ if (STAGE === 'split') {
   ].filter(Boolean).join('\n\n')
   let split = await agent(SPLIT_PROMPT(''), { label: 'split', phase: 'Split', schema: PRS })
   if (!split || !split.ok) {
-    return { status: 'blocked', stage: 'split', reason: split ? split.error : 'split agent failed' }
+    return { status: 'blocked', stage: 'split', reason: split ? split.error : 'split agent failed', nextActions: NEXT_STEPS.blocked }
   }
   const critique = await agent(
     `Critique the PR plan in ${FDIR}/ledger.md and ${FDIR}/prs.json against ${FDIR}/master-plan.md and the code in ${REPO}. ${AT(REPO)} Check: each PR mergeable alone without breaking main or exposing half a feature; every acceptance criterion covered exactly once; dependencies in the right order; migrations isolated; nothing L that could be split. ok=true only if the plan is safe to build.`,
@@ -269,10 +275,10 @@ const next = await agent(
   { label: 'pick next PR', schema: NEXT, effort: 'low' },
 )
 if (!next || !next.ok) {
-  return { status: 'blocked', stage: 'build', reason: next ? next.error : 'pick agent failed' }
+  return { status: 'blocked', stage: 'build', reason: next ? next.error : 'pick agent failed', nextActions: NEXT_STEPS.blocked }
 }
 if (next.allDone) {
-  return { status: 'done', ticket: TICKET, message: 'Every PR in the plan is built.' }
+  return { status: 'done', ticket: TICKET, message: 'Every PR in the plan is built.', nextActions: [`Update the Phase line in ${FDIR}/ledger.md.`, 'Say "brag about it" when the last PR merges.'] }
 }
 log(`Building PR${next.n}/${next.total}: ${next.title}`)
 
@@ -291,7 +297,7 @@ let build = await agent(
   { label: `build PR${next.n}`, schema: BUILD },
 )
 if (!build || !build.done) {
-  return { status: 'blocked', stage: 'build', pr: next.n, reason: build ? build.notes : 'build agent failed' }
+  return { status: 'blocked', stage: 'build', pr: next.n, reason: build ? build.notes : 'build agent failed', nextActions: NEXT_STEPS.blocked }
 }
 const WT = build.worktreePath || wtPath
 
@@ -354,10 +360,10 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
 
 const otherNotes = reviews.flatMap((r) => r.other)
 if (mustFix.length > 0) {
-  return { status: 'needs-human', stage: 'build', pr: next.n, branch, worktreePath: WT, mustFix, otherNotes }
+  return { status: 'needs-human', stage: 'build', pr: next.n, branch, worktreePath: WT, mustFix, otherNotes, nextActions: NEXT_STEPS.needsHuman(WT) }
 }
 if (input.dryRun) {
-  return { status: 'dry-run-complete', stage: 'build', pr: next.n, branch, worktreePath: WT, summary: build.summary, otherNotes }
+  return { status: 'dry-run-complete', stage: 'build', pr: next.n, branch, worktreePath: WT, summary: build.summary, otherNotes, nextActions: NEXT_STEPS.dryRun(WT) }
 }
 
 phase('Ship')
