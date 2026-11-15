@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Review a teammate's Activepieces pull request the way Louai does - four reviewer agents in parallel, check the serious claims yourself, then draft one friendly review with Blockers and Non-blockers and post it only after a yes. Use when asked to "review PR 1234", "review this PR", or given a github.com/activepieces/activepieces/pull/... link that is not Louai's own PR (for comments on his own PR, use the colleague-review workflow).
+description: Review a teammate's Activepieces pull request the way Louai does - four reviewer agents in parallel, check the serious claims yourself, then draft one friendly review with Blockers and Non-blockers and post it only after a yes. Use ONLY when Louai says "factory review-pr <n>", "factory review PR <n>" or /my-factory:review-pr. A plain "review this PR" is normal work: do not load this skill for it.
 ---
 
 # Review a teammate's PR

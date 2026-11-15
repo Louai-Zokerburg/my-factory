@@ -1,7 +1,7 @@
 export const meta = {
   name: 'small-bug',
   description: 'Fix a small bug end to end: ticket triage, failing test, fix, parallel security/quality/test review, draft PR',
-  whenToUse: 'A small, well-scoped bug in an existing Activepieces feature, from a Linear ticket key or a plain description. Not for features or multi-PR work.',
+  whenToUse: 'A small, well-scoped bug in an existing Activepieces feature, from a Linear ticket key or a plain description. Not for features or multi-PR work. Run ONLY when Louai says "factory" or names this recipe.',
   phases: [
     { title: 'Triage', detail: 'read the ticket, check it may be built, locate the code' },
     { title: 'Setup', detail: 'fresh worktree and branch off origin/main' },

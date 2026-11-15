@@ -1,6 +1,6 @@
 ---
 name: factory
-description: Louai's factory help desk - what the my-factory plugin can do, which workflow fits a task, what to type, and the current status. Use when asked "factory help", "factory status", "what can my factory do", "which workflow should I use", "how do I fix/review/build X with the factory", or to check the plugin loaded (for example from a phone session).
+description: Louai's my-factory help desk - what the plugin can do, which recipe fits a task, what to type, current status. Use ONLY when the message contains the word "factory" ("factory help", "factory status", "factory small-bug ENG-1") or /my-factory:factory. Never for normal coding, review or planning requests.
 ---
 
 # Factory

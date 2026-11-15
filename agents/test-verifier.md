@@ -1,6 +1,6 @@
 ---
 name: test-verifier
-description: Proves an Activepieces change works. Writes the missing tests (failing first for bugs), runs the relevant unit/API/E2E tests plus lint, and checks the ticket's E2E markers. Use after implementing a change, or before a fix to write the reproducing test. May add or edit test files only.
+description: Proves an Activepieces change works. Writes the missing tests (failing first for bugs), runs the relevant unit/API/E2E tests plus lint, and checks the ticket's E2E markers. May add or edit test files only. Use ONLY when a my-factory workflow or skill calls it, or Louai names this agent or says "factory". Never pick it on your own during normal work.
 model: inherit
 effort: high
 color: green

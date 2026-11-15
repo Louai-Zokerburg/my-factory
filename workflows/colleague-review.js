@@ -1,7 +1,7 @@
 export const meta = {
   name: 'colleague-review',
   description: 'Handle review comments on one of your PRs: sort every unresolved thread, fix the clear ones, draft replies for the rest',
-  whenToUse: 'A colleague left review comments on your Activepieces PR. Pass the PR number. Commits stay local and replies stay drafts unless args.push is true.',
+  whenToUse: 'A colleague left review comments on your Activepieces PR. Pass the PR number. Commits stay local and replies stay drafts unless args.push is true. Run ONLY when Louai says "factory" or names this recipe.',
   phases: [
     { title: 'Collect', detail: 'unresolved threads and a worktree on the PR branch' },
     { title: 'Sort', detail: 'one agent per thread: clear fix, question, disagree, or already done' },

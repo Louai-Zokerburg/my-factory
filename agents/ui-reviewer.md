@@ -1,6 +1,6 @@
 ---
 name: ui-reviewer
-description: Reviews a UI change in the Activepieces web app - design-system colour steps, layout, accessibility, i18n, white-labeling, and how it actually looks in before/after screenshots. Use for any change under packages/web that users can see. Read-only on source; may run the app and take screenshots.
+description: Reviews a UI change in the Activepieces web app - design-system colour steps, layout, accessibility, i18n, white-labeling, and how it actually looks in before/after screenshots. Read-only on source; may run the app and take screenshots. Use ONLY when a my-factory workflow or skill calls it, or Louai names this agent or says "factory". Never pick it on your own during normal work.
 model: inherit
 effort: medium
 color: purple

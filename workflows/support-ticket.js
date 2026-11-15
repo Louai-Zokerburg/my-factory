@@ -1,7 +1,7 @@
 export const meta = {
   name: 'support-ticket',
   description: 'Investigate a Linear support ticket: reproduce from the codebase, decide bug / config / feature / need-info, challenge the conclusion, draft the ticket reply',
-  whenToUse: 'A support or bug report ticket in Linear where the cause is not known yet. Pass the ticket key. Drafts only, unless args.comment is true; args.fix runs small-bug on a confirmed bug.',
+  whenToUse: 'A support or bug report ticket in Linear where the cause is not known yet. Pass the ticket key. Drafts only, unless args.comment is true; args.fix runs small-bug on a confirmed bug. Run ONLY when Louai says "factory" or names this recipe.',
   phases: [
     { title: 'Read', detail: 'ticket, comments, attachments; public or not' },
     { title: 'Investigate', detail: 'code paths, logs skills, recent changes' },

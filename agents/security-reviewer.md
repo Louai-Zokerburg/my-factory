@@ -1,6 +1,6 @@
 ---
 name: security-reviewer
-description: Reviews an Activepieces diff for security problems specific to this codebase - tenant isolation, edition leaks, SSRF, endpoint access config, secrets, and public-ticket leaks. Use after code changes and before a PR opens. Read-only; reports findings, never edits.
+description: Reviews an Activepieces diff for security problems specific to this codebase - tenant isolation, edition leaks, SSRF, endpoint access config, secrets, and public-ticket leaks. Read-only; reports findings, never edits. Use ONLY when a my-factory workflow or skill calls it, or Louai names this agent or says "factory". Never pick it on your own during normal work.
 model: inherit
 effort: high
 color: red

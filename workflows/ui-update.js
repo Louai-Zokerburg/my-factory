@@ -1,7 +1,7 @@
 export const meta = {
   name: 'ui-update',
   description: 'Make a UI change in the Activepieces web app: plan, implement, test, UI + quality review with before/after screenshots, draft PR with a gallery',
-  whenToUse: 'A visual or UX change in packages/web, from a Linear ticket and/or a description. Not for backend work. args.dryRun stops before pushing.',
+  whenToUse: 'A visual or UX change in packages/web, from a Linear ticket and/or a description. Not for backend work. args.dryRun stops before pushing. Run ONLY when Louai says "factory" or names this recipe.',
   phases: [
     { title: 'Plan', detail: 'ticket, screens touched, components to reuse' },
     { title: 'Setup', detail: 'worktree and branch off origin/main' },

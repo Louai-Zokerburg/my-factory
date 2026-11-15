@@ -1,7 +1,7 @@
 export const meta = {
   name: 'big-feature',
   description: 'Build a big Activepieces feature in approved stages: plan (research + PRD), split (ticket + PR list), build (next PR, reviewed, draft PR)',
-  whenToUse: 'A feature too big for one PR, from a Linear ticket. Run stage "plan", approve the PRD, run stage "split", approve the PR list, then run stage "build" once per PR. State lives in my-factory/features/<ticket>/.',
+  whenToUse: 'A feature too big for one PR, from a Linear ticket. Run stage "plan", approve the PRD, run stage "split", approve the PR list, then run stage "build" once per PR. State lives in my-factory/features/<ticket>/. Run ONLY when Louai says "factory" or names this recipe.',
   phases: [
     { title: 'Research', detail: 'plan: code, brain and decisions, Linear context, outside prior art, in parallel' },
     { title: 'PRD', detail: 'plan: draft the PRD, critic, revise' },

@@ -1,6 +1,6 @@
 ---
 name: quality-reviewer
-description: Reviews an Activepieces diff against the repo's coding conventions (CLAUDE.md and package CLAUDE.md files) and for simplification - duplicated logic, dead code, needless abstraction. Use after code changes and before a PR opens. Read-only; reports findings, never edits.
+description: Reviews an Activepieces diff against the repo's coding conventions (CLAUDE.md and package CLAUDE.md files) and for simplification - duplicated logic, dead code, needless abstraction. Read-only; reports findings, never edits. Use ONLY when a my-factory workflow or skill calls it, or Louai names this agent or says "factory". Never pick it on your own during normal work.
 model: inherit
 effort: medium
 color: blue
