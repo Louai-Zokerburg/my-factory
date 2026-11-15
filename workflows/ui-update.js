@@ -19,6 +19,11 @@ if (!input.ticket && !input.description) {
   return { status: 'blocked', reason: 'Pass args.ticket (e.g. "AI-123") and/or args.description.' }
 }
 
+const MIN_QUESTIONS = 5
+if (!input.planPath) {
+  return { status: 'blocked', stage: 'plan', reason: 'No plan file: every recipe starts with a plan session.', nextActions: ['Type: factory ui-update <ticket>'] }
+}
+
 const WHERE = {
   type: 'object',
   properties: { ok: { type: 'boolean' }, repo: { type: 'string' }, factory: { type: 'string' }, error: { type: 'string' } },
@@ -39,8 +44,37 @@ if (!where || !where.ok) {
 }
 const REPO = where.repo
 
+const PLAN_CHECK = {
+  type: 'object',
+  properties: {
+    ok: { type: 'boolean' },
+    error: { type: 'string' },
+    questions: { type: 'number' },
+    edition: { type: 'string' },
+    criteria: { type: 'array', items: { type: 'string' } },
+    pages: { type: 'string' },
+  },
+  required: ['ok', 'error', 'questions', 'edition', 'criteria', 'pages'],
+}
+const planFile = await agent(
+  [
+    `Read the plan file ${input.planPath}. Change nothing.`,
+    'ok=false with error if the file is missing or lacks any of the sections "## Questions", "## Plan", "## Verify".',
+    'questions: the number of lines under "## Questions" that start with "Q" followed by a number and a dot (Q1., Q2., ...).',
+    'edition: the value after "Edition:" under "## Verify" (ce, ee or cloud; "ce" if missing). criteria: the acceptance criteria bullets under "## Plan", verbatim. pages: the "Pages to check in the browser" value, verbatim ("none" if missing).',
+  ].join('\n'),
+  { label: 'plan check', schema: PLAN_CHECK, effort: 'low' },
+)
+if (!planFile || !planFile.ok) {
+  return { status: 'blocked', stage: 'plan', reason: planFile ? planFile.error : 'plan check agent failed', nextActions: [`Fix or recreate ${input.planPath} with the plan session.`] }
+}
+if (planFile.questions < MIN_QUESTIONS) {
+  return { status: 'blocked', stage: 'plan', reason: `The plan has ${planFile.questions} questions; this recipe needs at least ${MIN_QUESTIONS}.`, nextActions: ['Rerun the plan session and finish the grilling, or say why the rest are waived.'] }
+}
+const PLAN_NOTE = `Louai's plan for this task is ${input.planPath}: read it first and follow its answers, scope and acceptance criteria. Where it conflicts with this prompt, the plan wins.`
+
 const WORKDIR_NOTE = (dir) =>
-  `Work only inside ${dir}. Your shell's working directory resets between commands, so start every Bash command with \`cd ${dir} && \`. Use absolute paths for Read/Edit/Write.`
+  `Work only inside ${dir}. Your shell's working directory resets between commands, so start every Bash command with \`cd ${dir} && \`. Use absolute paths for Read/Edit/Write. ${PLAN_NOTE}`
 
 const PLAN = {
   type: 'object',
