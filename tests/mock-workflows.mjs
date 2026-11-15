@@ -38,6 +38,7 @@ const REPLIES = {
 async function run(name, args, opts, expect) {
   const calls = []
   let reviews = 0
+  let verifies = 0
   const agent = async (prompt, o) => {
     const l = o.label
     calls.push(l)
@@ -46,6 +47,11 @@ async function run(name, args, opts, expect) {
       reviews++
       const bad = opts.badOnce && reviews === 1
       return { verdict: bad ? 'fail' : 'pass', mustFix: bad ? [{ file: 'x', where: 'x', line: 1, problem: 'p', fix: 'f' }] : [], other: [], screenshots: l.startsWith('ui') ? ['s.png'] : undefined, securityImpact: l.startsWith('security') ? 'no' : undefined }
+    }
+    if (l.startsWith('verify')) {
+      verifies++
+      const bad = opts.badVerifyOnce && verifies === 1
+      return { verdict: bad ? 'fail' : 'pass', specs: ['spec.ts'], screenshots: ['01.png'], mustFix: bad ? ['console error on /flows'] : [], notes: '' }
     }
     if (l.startsWith('address')) return name === 'small-bug' ? FIX : BUILD
     if (l.startsWith('build PR')) return BUILD
@@ -66,22 +72,24 @@ async function run(name, args, opts, expect) {
 
 const locatedFirst = (calls) => calls[0] === 'locate'
 const cases = [
-  ['small-bug', { planPath: '/p.md',  ticket: 'ENG-1' }, { check: locatedFirst }, 'done'],
-  ['small-bug', { planPath: '/p.md',  ticket: 'ENG-1', repo: '/r' }, { check: (c) => !c.includes('locate') }, 'done'],
-  ['small-bug', { planPath: '/p.md',  ticket: 'ENG-1' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
-  ['small-bug', { planPath: '/p.md',  ticket: 'ENG-1', dryRun: true }, {}, 'dry-run-complete'],
-  ['small-bug', { planPath: '/p.md',  ticket: 'ENG-1' }, { noRepo: true }, 'blocked'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { check: locatedFirst }, 'done'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1', repo: '/r' }, { check: (c) => !c.includes('locate') }, 'done'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1', dryRun: true }, {}, 'dry-run-complete'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { badVerifyOnce: true, check: (c) => c.includes('address r1') && c.includes('verify r2') }, 'done'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'build', pr: 2, planPath: '/plans/f/pr-2-ui.md' }, { badVerifyOnce: true, check: (c) => c.includes('verify r2') }, 'done'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { noRepo: true }, 'blocked'],
   ['small-bug', undefined, { check: (c) => c.length === 0 }, 'blocked'],
   ['small-bug', { ticket: 'ENG-1' }, { check: (c) => c.length === 0 }, 'blocked'],
   ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { fewQuestions: true, check: (c) => !c.includes('triage') }, 'blocked'],
   ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1' }, { badPlan: true, check: (c) => !c.includes('read ticket') }, 'blocked'],
   ['small-bug', 'ENG-1', {}, 'blocked'],
-  ['colleague-review', { planPath: '/p.md',  pr: 'https://github.com/x/y/pull/17339' }, { check: (c, r) => r.pr === '17339' && !c.includes('push') }, 'done'],
-  ['colleague-review', { planPath: '/p.md',  pr: 17339, push: true }, { check: (c) => c.includes('push') }, 'done'],
+  ['colleague-review', { planPath: '/p.md', pr: 'https://github.com/x/y/pull/17339' }, { check: (c, r) => r.pr === '17339' && !c.includes('push') }, 'done'],
+  ['colleague-review', { planPath: '/p.md', pr: 17339, push: true }, { check: (c) => c.includes('push') }, 'done'],
   ['colleague-review', { planPath: '/p.md', }, {}, 'blocked'],
-  ['support-ticket', { planPath: '/p.md',  ticket: 'GIT-1' }, {}, 'done'],
-  ['support-ticket', { planPath: '/p.md',  ticket: 'GIT-1', fix: true, dryRun: true }, { check: (c) => c.includes('WF:my-factory:small-bug') }, 'done'],
-  ['ui-update', { planPath: '/p.md',  ticket: 'AI-9', dryRun: true }, {}, 'dry-run-complete'],
+  ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1' }, {}, 'done'],
+  ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1', fix: true, dryRun: true }, { check: (c) => c.includes('WF:my-factory:small-bug') }, 'done'],
+  ['ui-update', { planPath: '/p.md', ticket: 'AI-9', dryRun: true }, {}, 'dry-run-complete'],
   ['ui-update', { planPath: '/p.md', description: 'make chips bigger' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
   ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { check: (c, r) => r.nextActions.length === 3 && r.masterPlan === '/plans/f/master-plan.md' }, 'awaiting-approval'],
   ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { fewQuestions: true, check: (c) => !c.some((l) => l.startsWith('research')) }, 'blocked'],

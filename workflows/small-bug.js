@@ -219,6 +219,35 @@ if (!fix || !fix.fixed || !fix.testPassed) {
   return { status: 'blocked', stage: 'fix', reason: fix ? fix.notes : 'fix agent failed', worktreePath: WT, branch, repro }
 }
 
+phase('Verify')
+const VERIFY = {
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: ['pass', 'fail', 'blocked'] },
+    specs: { type: 'array', items: { type: 'string' } },
+    screenshots: { type: 'array', items: { type: 'string' } },
+    mustFix: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'string' },
+  },
+  required: ['verdict', 'specs', 'screenshots', 'mustFix', 'notes'],
+}
+const FACTORY_DIR = where.factory || '/home/louai/work/my-factory'
+const SHOTS = `/home/louai/work/screenshots/${branch.replace(/\//g, '-')}`
+const runVerify = (n) => agent(
+  [
+    'Mode: verify-app.',
+    `Checkout: ${WT}. Edition: ${planFile.edition}. Factory: ${FACTORY_DIR}. Run id: ${branch}.`,
+    `Acceptance criteria: ${planFile.criteria.join('; ') || 'see the plan'}`,
+    `Pages to check in the browser: ${planFile.pages}`,
+    `Screenshots folder: ${SHOTS}`,
+    PLAN_NOTE,
+  ].join('\n'),
+  { label: n === 1 ? 'verify' : `verify r${n}`, phase: 'Verify', agentType: 'my-factory:test-verifier', schema: VERIFY },
+)
+let verify = await runVerify(1)
+const appFix = () => (verify && verify.verdict !== 'pass' ? (verify.mustFix.length ? verify.mustFix : [verify.notes || 'in-app verification did not pass']).map((problem) => ({ file: '(running app)', problem, fix: 'make the in-app check pass' })) : [])
+const verifyNote = () => (verify ? `In-app proof (${verify.verdict}): specs ${verify.specs.join(', ') || 'none'}; screenshots ${verify.screenshots.join(', ') || 'none'}.` : 'In-app verification did not run.')
+
 phase('Review')
 let reviews = []
 let mustFix = []
@@ -229,7 +258,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     () => agent(reviewTask, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
     () => agent(`Mode: verify. ${reviewTask}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
   ])).filter(Boolean)
-  mustFix = reviews.flatMap((r) => r.mustFix)
+  mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]
   log(`Review round ${round}: ${mustFix.length} must-fix`)
   if (mustFix.length === 0 || round === MAX_REVIEW_ROUNDS) break
   fix = (await agent(
@@ -240,6 +269,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: FIX },
   )) || fix
+  if (appFix().length) verify = await runVerify(round + 1)
 }
 
 const securityImpact = (reviews.find((r) => r.securityImpact) || {}).securityImpact || 'no'
@@ -259,6 +289,7 @@ const ship = await agent(
     `Push with \`git push -u origin ${branch}\`. Create the PR with \`gh pr create --draft --assignee @me --label "🐛 bug"\`, following the "Pull Requests" section of CLAUDE.md: fill \`.github/pull_request_template.md\`, tick \`- [x] no\` under Breaking change? unless the fix changes behaviour users rely on, and tick \`${securityImpact.startsWith('yes') ? '- [x] yes — security-sensitive' : '- [x] no'}\` under Security impact?.`,
     triage.ticketKey ? `Put \`Fixes ${triage.ticketKey}\` in the body. Then follow \`.claude/rules/linear-tickets.md\`: comment on ${triage.ticketKey} with the root cause, the fix, and the PR link.${triage.isPublicTicket ? ' This ticket is PUBLIC: no security details, secrets or customer data in the comment.' : ''}` : 'There is no ticket; skip Linear.',
     `Root cause and fix summary for the body: ${fix.summary}. Test added: ${repro.testPath}.`,
+    `Add a "Proof" section to the PR body: ${verifyNote()} List the E2E test titles and embed or link the screenshots.`,
     'End the PR body with: 🤖 Generated with [Claude Code](https://claude.com/claude-code)',
   ].join('\n\n'),
   { label: 'draft PR', schema: SHIP, effort: 'low' },

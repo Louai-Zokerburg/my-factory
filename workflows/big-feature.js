@@ -295,6 +295,35 @@ if (!build || !build.done) {
 }
 const WT = build.worktreePath || wtPath
 
+phase('Verify')
+const VERIFY = {
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: ['pass', 'fail', 'blocked'] },
+    specs: { type: 'array', items: { type: 'string' } },
+    screenshots: { type: 'array', items: { type: 'string' } },
+    mustFix: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'string' },
+  },
+  required: ['verdict', 'specs', 'screenshots', 'mustFix', 'notes'],
+}
+const FACTORY_DIR = where.factory || '/home/louai/work/my-factory'
+const SHOTS = `/home/louai/work/screenshots/${branch.replace(/\//g, '-')}`
+const runVerify = (n) => agent(
+  [
+    'Mode: verify-app.',
+    `Checkout: ${WT}. Edition: ${planFile.edition}. Factory: ${FACTORY_DIR}. Run id: ${branch}.`,
+    `Acceptance criteria: ${planFile.criteria.join('; ') || 'see the plan'}`,
+    `Pages to check in the browser: ${planFile.pages}`,
+    `Screenshots folder: ${SHOTS}`,
+    `Read the PR plan ${PLAN_PATH} first.`,
+  ].join('\n'),
+  { label: n === 1 ? 'verify' : `verify r${n}`, phase: 'Verify', agentType: 'my-factory:test-verifier', schema: VERIFY },
+)
+let verify = await runVerify(1)
+const appFix = () => (verify && verify.verdict !== 'pass' ? (verify.mustFix.length ? verify.mustFix : [verify.notes || 'in-app verification did not pass']).map((problem) => ({ where: '(running app)', problem, fix: 'make the in-app check pass' })) : [])
+const verifyNote = () => (verify ? `In-app proof (${verify.verdict}): specs ${verify.specs.join(', ') || 'none'}; screenshots ${verify.screenshots.join(', ') || 'none'}.` : 'In-app verification did not run.')
+
 phase('Review')
 let reviews = []
 let mustFix = []
@@ -309,7 +338,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     reviewers.push(() => agent(task, { label: `ui r${round}`, phase: 'Review', agentType: 'my-factory:ui-reviewer', schema: REVIEW }))
   }
   reviews = (await parallel(reviewers)).filter(Boolean)
-  mustFix = reviews.flatMap((r) => r.mustFix)
+  mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]
   log(`PR${next.n} review round ${round}: ${mustFix.length} must-fix`)
   if (mustFix.length === 0 || round === MAX_REVIEW_ROUNDS) break
   build = (await agent(
@@ -320,6 +349,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: BUILD },
   )) || build
+  if (appFix().length) verify = await runVerify(round + 1)
 }
 
 const otherNotes = reviews.flatMap((r) => r.other)
@@ -340,6 +370,7 @@ const ship = await agent(
     `Comment on ${TICKET} with the PR link and the criteria covered (follow \`.claude/rules/linear-tickets.md\`).`,
     `In ${FDIR}/ledger.md set PR${next.n} to \`open\` with the PR URL and branch, and note in its Notes cell anything the next PR must know. ${STAMP}`,
     `Summary for the PR body: ${build.summary}`,
+    `Add a "Proof" section to the PR body: ${verifyNote()} List the E2E test titles and embed or link the screenshots.`,
     'End the PR body with: 🤖 Generated with [Claude Code](https://claude.com/claude-code)',
   ].join('\n\n'),
   { label: 'draft PR', schema: SHIP },

@@ -13,7 +13,7 @@ You prove that one change in the Activepieces monorepo works. You may create and
 
 `CLAUDE.md` (sections "Testing", "Commands", "Verification"), the touched package's `CLAUDE.md`, and for E2E `packages/tests-e2e/README.md`.
 
-## Two modes
+## Three modes
 
 The caller says which. If unclear, use **verify**.
 
@@ -29,6 +29,16 @@ The caller says which. If unclear, use **verify**.
 4. Run the narrowest test commands that cover the change, then `npm run lint-dev`, then the typecheck of every touched package, **test files included**: vitest does not typecheck, but CI does. For `packages/web` that is `cd packages/web && npm run typecheck` (both `tsconfig.app.json` and `tsconfig.spec.json`); it needs the internal packages built first (`npx turbo run build --filter=web^... --output-logs=errors-only`), or every file fails with unrelated errors.
 5. If a needed service (Postgres, Redis) is missing, say so; do not fake a pass.
 6. In a fresh checkout (cloud session or new worktree), install and build the internal packages before the first test, or every API test fails with `Failed to resolve entry for package "@activepieces/..."`: `bun install --frozen-lockfile && npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only` (about 40 s).
+
+**verify-app** (prove it in the running app; the caller gives the checkout, edition, criteria, pages, factory path and a run id):
+1. Take the app lock: `bash <factory>/scripts/app-lock.sh acquire <run id>`. It waits while another run holds it. Run `... touch <run id>` every ~10 minutes of work.
+2. Boot from the checkout: `cd <checkout> && ap-dev up <edition> --detach --replace` (add `--pieces=a,b` when a spec needs pieces; the first boot in a fresh worktree installs deps and can take 10+ minutes). Then `ap-dev wait`. After every code or test edit, run `ap-dev wait` again before re-testing.
+3. **Proof that stays:** for each acceptance criterion with ``E2E: `<title>` ``, make sure that Playwright spec exists in `packages/tests-e2e` (write it per its README if missing) and run it:
+   `E2E_INSTANCE_URL=http://localhost:4200 E2E_EMAIL=dev@ap.com E2E_PASSWORD=12345678 npx playwright test --config=packages/tests-e2e/playwright.config.ts <spec> --reporter=line`
+4. **Eyes:** if pages were given, `bash <factory>/scripts/ensure-chrome.sh`, then follow `<factory>/skills/ext-browser-devtools/SKILL.md` on each page: no new console errors, no failed (>=400) requests. Save screenshots (`NN-page-state.png`) to the folder the caller names.
+4b. If a spec or check fails because of the source code, report it in mustFix; never change source.
+5. **Always, even on failure:** `cd <checkout> && ap-dev stop`, then `bash <factory>/scripts/app-lock.sh release <run id>`.
+6. Report: verdict, specs run with their result, screenshots, console/network problems, and anything unverified.
 
 ## Output
 

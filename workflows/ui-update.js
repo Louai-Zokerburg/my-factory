@@ -193,6 +193,35 @@ if (!build || !build.done) {
   return { status: 'blocked', stage: 'build', reason: build ? build.notes : 'build agent failed', worktreePath: WT, branch }
 }
 
+phase('Verify')
+const VERIFY = {
+  type: 'object',
+  properties: {
+    verdict: { type: 'string', enum: ['pass', 'fail', 'blocked'] },
+    specs: { type: 'array', items: { type: 'string' } },
+    screenshots: { type: 'array', items: { type: 'string' } },
+    mustFix: { type: 'array', items: { type: 'string' } },
+    notes: { type: 'string' },
+  },
+  required: ['verdict', 'specs', 'screenshots', 'mustFix', 'notes'],
+}
+const FACTORY_DIR = where.factory || '/home/louai/work/my-factory'
+const SHOTS = `/home/louai/work/screenshots/${branch.replace(/\//g, '-')}`
+const runVerify = (n) => agent(
+  [
+    'Mode: verify-app.',
+    `Checkout: ${WT}. Edition: ${planFile.edition}. Factory: ${FACTORY_DIR}. Run id: ${branch}.`,
+    `Acceptance criteria: ${planFile.criteria.join('; ') || 'see the plan'}`,
+    `Pages to check in the browser: ${planFile.pages}`,
+    `Screenshots folder: ${SHOTS}`,
+    PLAN_NOTE,
+  ].join('\n'),
+  { label: n === 1 ? 'verify' : `verify r${n}`, phase: 'Verify', agentType: 'my-factory:test-verifier', schema: VERIFY },
+)
+let verify = await runVerify(1)
+const appFix = () => (verify && verify.verdict !== 'pass' ? (verify.mustFix.length ? verify.mustFix : [verify.notes || 'in-app verification did not pass']).map((problem) => ({ where: '(running app)', problem, fix: 'make the in-app check pass' })) : [])
+const verifyNote = () => (verify ? `In-app proof (${verify.verdict}): specs ${verify.specs.join(', ') || 'none'}; screenshots ${verify.screenshots.join(', ') || 'none'}.` : 'In-app verification did not run.')
+
 phase('Review')
 let reviews = []
 let mustFix = []
@@ -203,8 +232,8 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     () => agent(`${task} Capture before (origin/main) and after screenshots with the pr-screenshots skill and list their paths in screenshots.`, { label: `ui r${round}`, phase: 'Review', agentType: 'my-factory:ui-reviewer', schema: REVIEW }),
     () => agent(task, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
   ])).filter(Boolean)
-  mustFix = reviews.flatMap((r) => r.mustFix)
-  screenshots = reviews.flatMap((r) => r.screenshots || [])
+  mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]
+  screenshots = [...(verify ? verify.screenshots : []), ...reviews.flatMap((r) => r.screenshots || [])]
   log(`Review round ${round}: ${mustFix.length} must-fix`)
   if (mustFix.length === 0 || round === MAX_REVIEW_ROUNDS) break
   build = (await agent(
@@ -215,6 +244,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: BUILD },
   )) || build
+  if (appFix().length) verify = await runVerify(round + 1)
 }
 
 const otherNotes = reviews.flatMap((r) => r.other)
@@ -233,6 +263,7 @@ const ship = await agent(
     `Create the PR with \`gh pr create --draft --assignee @me --label "🌟 feature"\` (use "🐛 bug" if this fixes broken UI), following the "Pull Requests" section of CLAUDE.md: fill \`.github/pull_request_template.md\`, tick no/no for Breaking change? and Security impact? unless the change says otherwise, and embed the before/after screenshots or gallery link in the description.`,
     plan.ticketKey ? `Put \`Fixes ${plan.ticketKey}\` in the body, then comment on ${plan.ticketKey} with what changed and the PR link.${plan.isPublicTicket ? ' The ticket is PUBLIC: no internal details.' : ''}` : 'No ticket; skip Linear.',
     `Change summary: ${build.summary}`,
+    `Add a "Proof" section to the PR body: ${verifyNote()} List the E2E test titles and embed or link the screenshots.`,
     'End the PR body with: 🤖 Generated with [Claude Code](https://claude.com/claude-code)',
   ].join('\n\n'),
   { label: 'draft PR', schema: SHIP },
