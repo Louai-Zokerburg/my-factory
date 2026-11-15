@@ -17,7 +17,7 @@ const REPLIES = {
   worktree: (o, p) => ({ ok: true, worktreePath: (p.match(/add -b \S+ (\S+)/) || [])[1] || '/wt', branch: 'b', error: '' }),
   reproduce: () => ({ reproduced: true, testPath: 't.test.ts', command: 'npm test', failingLine: 'x', notes: '' }),
   fix: () => FIX,
-  'plan check': (o) => ({ ok: !o.badPlan, error: o.badPlan ? 'missing ## Verify' : '', questions: o.fewQuestions ? 2 : 9, edition: 'ee', criteria: ['AC1'], pages: '/flows' }),
+  'plan check': (o) => ({ ok: !o.badPlan, error: o.badPlan ? 'missing ## Verify' : '', questions: o.fewQuestions ? 2 : 31, edition: 'ee', criteria: ['AC1'], pages: '/flows' }),
   collect: () => ({ ok: true, error: '', branch: 'feat/x', worktreePath: '/wt', headSha: 'abc', threads: [{ threadId: 'T1', commentId: '1', author: 'a', path: 'a/b.ts', line: 3, body: 'rename' }, { threadId: 'T2', commentId: '2', author: 'a', path: 'a/c.ts', body: 'why?' }] }),
   'apply fixes': () => ({ committed: true, commit: 'c1', applied: ['T1'], skipped: [], checks: 'ok' }),
   push: () => 'pushed',
@@ -83,11 +83,13 @@ const cases = [
   ['support-ticket', { planPath: '/p.md',  ticket: 'GIT-1', fix: true, dryRun: true }, { check: (c) => c.includes('WF:my-factory:small-bug') }, 'done'],
   ['ui-update', { planPath: '/p.md',  ticket: 'AI-9', dryRun: true }, {}, 'dry-run-complete'],
   ['ui-update', { planPath: '/p.md', description: 'make chips bigger' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
-  ['big-feature', { ticket: 'ENG-1' }, {}, 'awaiting-approval'],
-  ['big-feature', { ticket: 'ENG-1', stage: 'split' }, {}, 'awaiting-approval'],
-  ['big-feature', { ticket: 'ENG-1', stage: 'build' }, {}, 'done'],
-  ['big-feature', { ticket: 'ENG-1', stage: 'plan' }, { noFactory: true }, 'blocked'],
-  ['big-feature', { ticket: 'ENG-1', stage: 'ship' }, {}, 'blocked'],
+  ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { check: (c, r) => r.nextActions.length === 3 && r.masterPlan === '/plans/f/master-plan.md' }, 'awaiting-approval'],
+  ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { fewQuestions: true, check: (c) => !c.some((l) => l.startsWith('research')) }, 'blocked'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'split', planPath: '/plans/f/master-plan.md' }, { check: (c, r) => !c.includes('plan check') && r.nextActions[2].includes('plan PR 1') }, 'awaiting-approval'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'build', pr: 2, planPath: '/plans/f/pr-2-ui.md' }, { check: (c, r) => c.filter((l) => l.startsWith('build PR')).length === 1 && r.nextActions.length >= 2 }, 'done'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'build', planPath: '/plans/f/pr-2-ui.md' }, { check: (c) => c.length === 0 }, 'blocked'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'plan' }, { check: (c) => c.length === 0 }, 'blocked'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'ship', planPath: '/x' }, {}, 'blocked'],
 ]
 
 let failed = 0
