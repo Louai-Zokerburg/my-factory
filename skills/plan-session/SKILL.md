@@ -25,13 +25,11 @@ Read the ticket and its comments (Linear MCP), the PR (`gh pr view`), the code i
 
 ## 3. Grill to the minimum
 Run the interview in **rounds** (adapted from mattpocock/skills `grilling`, MIT, © Matt Pocock):
-- A round asks every question whose prerequisites are settled. Number them across the whole session (Q1, Q2, …), give your recommended answer, and word each so "yes" accepts it:
-
-```
-❓ **Q3 - <title>**: <question, options if any>
-➡️ <recommended answer>
-```
-- Wait for the answers, recompute what is now askable, ask the next round. Big-feature: rounds of 5–10.
+- A round asks every question whose prerequisites are settled. **Ask with the `AskUserQuestion` tool, never as chat text.** One call holds up to 4 questions, so a round is several calls in a row.
+  - Number questions across the whole session: the `question` starts with `Q3 - `, the `header` is a short tag (≤12 chars).
+  - 2–4 options each. Your recommended answer is the first option, its label ending in `(Recommended)`. Put what you found in the code into the `question` or option `description`, since the form is all Louai sees.
+  - Louai can always pick "Other" to type his own answer.
+- After each call, recompute what is now askable and ask the next. Big-feature: rounds of 5–10 questions.
 - **Every question asked counts**, including "I found X in the code, confirm?". The minimum is a floor of *real* questions: never pad. If you run out of real questions before the minimum, say so and ask Louai to waive the rest.
 - Cover at least: scope and out-of-scope, the expected behaviour, editions (ce/ee/cloud) and which one to verify on, how to prove it works (which test seams, which pages to check in the browser), risks, and anything a reviewer would ask. Review recipes: focus, depth, nits or blockers only, tone.
 - Stop when the minimum is met **and** nothing is silently assumed. Confirm shared understanding before writing.
