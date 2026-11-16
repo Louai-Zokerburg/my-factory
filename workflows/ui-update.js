@@ -136,9 +136,9 @@ const REVIEW = {
   required: ['verdict', 'mustFix', 'other'],
 }
 
-const GREPTILE_TASK = ({ dir, base }) => [
+const GREPTILE_TASK = ({ dir, baseRef = 'origin/main' }) => [
   `Run Greptile, the AI reviewer that also reviews our PRs in CI, on the committed changes in ${dir} before anything is pushed.`,
-  `Command: \`cd ${dir} && greptile review ${base ? `-b ${base} ` : ''}--agent\`. It takes several minutes: start it with run_in_background, wait for the completion notification, never cut it short.`,
+  `Command: \`cd ${dir} && git fetch -q origin && greptile review -b $(git rev-parse ${baseRef}) --agent\`. Always pass that commit: a bare branch name makes Greptile diff against the stale local branch and review other people's merged work. It takes about 8 minutes: start it with run_in_background, wait for the completion notification, never cut it short.`,
   'If it exits nonzero or says it is not signed in, return verdict "blocked", an empty mustFix, and the error in other.',
   "Otherwise check every finding against the code. Real bugs, security problems and broken behaviour go in mustFix (file, line, problem, Greptile's suggested fix). Style, nits, and findings you disproved (with why) go in other. Edit nothing.",
 ].join('\n')

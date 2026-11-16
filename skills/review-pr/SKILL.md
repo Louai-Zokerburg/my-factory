@@ -33,7 +33,7 @@ Start these at once, each pointed at the worktree and `git diff origin/<base>...
 - `my-factory:quality-reviewer`: also ask it to check the description matches the code.
 - `my-factory:ui-reviewer`: only when `packages/web` changed. Code-only unless the plan says to run their branch; then it boots the worktree with `ap-dev` under the app lock (`<factory>/scripts/app-lock.sh`) and checks the pages with `<factory>/skills/ext-browser-devtools/SKILL.md`.
 - `my-factory:test-verifier`: read-only verify. Run the tests the author claims, eslint without `--fix`, and list untested behaviour.
-- **Own-PR mode only:** Greptile, the reviewer CI runs. In the worktree, `greptile review -b <base> --agent` (committed changes only; several minutes, run it in the background). Its findings go through step 4 like everyone else's.
+- **Own-PR mode only:** Greptile, the reviewer CI runs. In the worktree, `git fetch -q origin && greptile review -b $(git rev-parse origin/<base>) --agent` (committed changes only; about 8 minutes, run it in the background). Never pass a bare branch name: Greptile then diffs against the stale local branch. Its findings go through step 4 like everyone else's.
 
 ## 4. Check before you trust
 
