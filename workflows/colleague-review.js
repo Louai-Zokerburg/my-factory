@@ -203,7 +203,7 @@ if (clearFixes.length > 0) {
       clearFixes.map((t, i) => `${i + 1}. [thread ${t.threadId}] ${t.path}${t.line ? `:${t.line}` : ''}: ${t.change}`).join('\n'),
       'Make only these changes. If one turns out wrong or unsafe once you are in the code, skip it and add `<thread id>: <reason>` to skipped. Put the thread id of every change you made in applied.',
       'Then run the narrowest tests covering the touched files and `npm run lint-dev`. If a fresh checkout fails with "Failed to resolve entry for package", first run `npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only`.',
-      `Commit once with message \`fix: address review comments on #${PR}\` ending with the line \`Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\`. Do not push.`,
+      `Commit once with message \`fix: address review comments on #${PR}\`. Do not push.`,
     ].join('\n\n'),
     { label: 'apply fixes', schema: FIX },
   )

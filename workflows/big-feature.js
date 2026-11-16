@@ -299,7 +299,7 @@ let build = await agent(
     `Scope: ${next.scope}`,
     `Acceptance criteria for this PR: ${next.acceptanceCriteria.join('; ')}`,
     '3. Implement only this scope. Write the tests each criterion names (unit, API, or the E2E test title it names, per `packages/tests-e2e/README.md`). Run them and `npm run lint-dev`.',
-    '4. Commit with a conventional message ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Do not push.',
+    '4. Commit with a conventional message, no Co-Authored-By trailer. Do not push.',
   ].join('\n\n'),
   { label: `build PR${next.n}`, schema: BUILD },
 )
@@ -359,7 +359,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     [
       `Address these review findings on ${branch}. ${AT(WT)}`,
       mustFix.map((f, i) => `${i + 1}. ${f.where}: ${f.problem} Fix: ${f.fix}`).join('\n'),
-      'Skip a finding that is wrong and say why in notes. Keep tests and lint passing; commit (same Co-Authored-By line). Do not push.',
+      'Skip a finding that is wrong and say why in notes. Keep tests and lint passing; commit. Do not push.',
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: BUILD },
   )) || build

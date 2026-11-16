@@ -1,6 +1,6 @@
 # my-factory
 
-Louai's personal Claude Code plugin: reviewer agents, workflows and an AI-center roadmap agent.
+Louai's personal Claude Code plugin for working on Activepieces: reviewer agents and workflows.
 See [PLAN.md](PLAN.md) for the design and rollout.
 
 ## Install (user scope)

@@ -224,7 +224,7 @@ let fix = await agent(
     `Fix this bug with the smallest correct change. ${WORKDIR_NOTE(WT)}`,
     bugBrief,
     `A failing test already proves it: ${repro.testPath}. Run it with: ${repro.command}`,
-    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev` and the typecheck of each touched package (for web: `cd packages/web && npm run typecheck`, which also checks test files), then commit with a conventional message (e.g. `fix(api): ...`), ending with the line `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Return the commit hash.',
+    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev` and the typecheck of each touched package (for web: `cd packages/web && npm run typecheck`, which also checks test files), then commit with a conventional message (e.g. `fix(api): ...`). Return the commit hash.',
   ].join('\n\n'),
   { label: 'fix', schema: FIX },
 )
@@ -279,7 +279,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     [
       `Address these review findings on branch ${branch}. ${WORKDIR_NOTE(WT)}`,
       mustFix.map((f, i) => `${i + 1}. ${f.file}${f.line ? `:${f.line}` : ''} — ${f.problem} Fix: ${f.fix}`).join('\n'),
-      `If a finding is wrong, skip it and say why in notes. Keep ${repro.testPath} passing, run \`npm run lint-dev\`, and commit (Co-Authored-By line as before).`,
+      `If a finding is wrong, skip it and say why in notes. Keep ${repro.testPath} passing, run \`npm run lint-dev\`, and commit.`,
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: FIX },
   )) || fix

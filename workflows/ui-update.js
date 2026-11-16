@@ -198,7 +198,7 @@ let build = await agent(
     brief,
     'Follow `packages/web/CLAUDE.md`: design-system colour steps only, existing components, i18n keys for every user-facing string, no hardcoded "Activepieces" in UI, tests under `packages/web/test/`.',
     'Add or update tests for any logic you change (`cd packages/web && npm test -- <file>`). Run `npm run lint-dev`.',
-    'Commit with a conventional message (`feat(web): ...` or `fix(web): ...`) ending with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.',
+    'Commit with a conventional message (`feat(web): ...` or `fix(web): ...`).',
   ].join('\n\n'),
   { label: 'build', schema: BUILD },
 )
@@ -256,7 +256,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     [
       `Address these review findings on ${branch}. ${WORKDIR_NOTE(WT)}`,
       mustFix.map((f, i) => `${i + 1}. ${f.where}: ${f.problem} Fix: ${f.fix}`).join('\n'),
-      'Skip a finding that is wrong and say why in notes. Keep tests and lint passing, then commit (same Co-Authored-By line).',
+      'Skip a finding that is wrong and say why in notes. Keep tests and lint passing, then commit.',
     ].join('\n\n'),
     { label: `address r${round}`, phase: 'Review', schema: BUILD },
   )) || build

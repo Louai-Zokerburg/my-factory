@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "my-factory",
-      "description": "Personal reviewer agents, workflows and roadmap agent.",
+      "description": "Personal reviewer agents and workflows.",
       "source": "./",
       "category": "productivity"
     }

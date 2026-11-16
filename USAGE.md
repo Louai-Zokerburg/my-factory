@@ -40,7 +40,7 @@ Nothing is merged or posted without you.
 | Not sure which | `factory pick <ticket, PR or sentence>` | 0–1 | The recipe + its `factory …` line |
 | Status | `factory status` | – | Version, app lock, running stack |
 
-Add `dryRun: true` when you say "go" to stop before anything is pushed. The AI digest still runs on its own on Fridays.
+Add `dryRun: true` when you say "go" to stop before anything is pushed.
 
 ## Where things live
 

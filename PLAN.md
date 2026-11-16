@@ -22,7 +22,6 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 | quality-reviewer | `CLAUDE.md` conventions and simplification. |
 | test-verifier | Failing test first, runs it, checks E2E markers per the Linear rule. |
 | researcher | Research + PRD for big features. |
-| roadmap | Weekly AI-center digest (see below). |
 
 ## Workflows
 
@@ -31,16 +30,11 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 3. **support-ticket**: read ticket, `/debug-failed-run` + `/analyze-logs`, decide bug / config / feature, findings to ticket. Bugs go to small-bug. GIT tickets are public.
 4. **ui-update**: before screenshots, change, after screenshots, ui-reviewer, PR with gallery.
 5. **big-feature**: research, PRD into ticket `Acceptance criteria` / `Decisions`, split into PRs, then per PR: worktree, implement, 4 reviewers in parallel, fix, PR. Approval after PRD, after split, before each PR goes to review.
-6. **roadmap** (weekly cloud routine), three sections:
-   - New models: OpenRouter `/models` + models.dev vs the 19 providers and Fast/Expert/Heavy tiers; suggest tier moves.
-   - Unblockers: open follow-ups from `brain/knowledge/ai-intelligence` (e.g. `ai` SDK pinned at 7.0.44, Agent OpenAI web search).
-   - Features and refactors: Anthropic / OpenAI / Gemini changelogs, AI SDK releases, Simon Willison; diff against last week's snapshot.
 
 ## Phone
 
 - Cloud sessions (claude.ai/code, mobile app) for factory runs.
 - Remote Control (`claude remote-control`) for local runs needing the dev stack.
-- Routines (`/schedule`) for cron and GitHub-triggered jobs.
 - Push notifications when a run finishes or needs approval.
 
 ## Adopt / borrow
@@ -55,7 +49,7 @@ activepieces repo (`CLAUDE.md`, `.claude/rules/`, `brain/`) and never forks them
 | Phase | What | Estimate | Status |
 |---|---|---|---|
 | 0 | Plugin repo, Remote Control, notifications, tested from phone | 30 min | done (notifications: manual toggle in `/config`) |
-| 1 | 4 reviewer agents + small-bug workflow + roadmap routine | 3 to 4 h | done: agents, small-bug (first live run), roadmap routine (Fridays 8:00, first digest delivered) |
+| 1 | 4 reviewer agents + small-bug workflow | 3 to 4 h | done |
 | 2 | Cloud environment for activepieces (setup script) | half a day, riskiest | done: live cloud run 380/380 tests pass (install 3 s, build 54 s); node 24 fixed and verified in cloud |
 | 3 | colleague-review, support-ticket, ui-update workflows | half a day | built + mock-tested; live runs pending |
 | 4 | big-feature workflow | 1 day + tuning | built + mock-tested (plan / split / build stages); live run pending |
