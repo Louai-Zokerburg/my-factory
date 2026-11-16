@@ -258,6 +258,13 @@ const REVIEW = {
   },
   required: ['verdict', 'mustFix', 'other'],
 }
+const GREPTILE_TASK = ({ dir, base }) => [
+  `Run Greptile, the AI reviewer that also reviews our PRs in CI, on the committed changes in ${dir} before anything is pushed.`,
+  `Command: \`cd ${dir} && greptile review ${base ? `-b ${base} ` : ''}--agent\`. It takes several minutes: start it with run_in_background, wait for the completion notification, never cut it short.`,
+  'If it exits nonzero or says it is not signed in, return verdict "blocked", an empty mustFix, and the error in other.',
+  "Otherwise check every finding against the code. Real bugs, security problems and broken behaviour go in mustFix (file, line, problem, Greptile's suggested fix). Style, nits, and findings you disproved (with why) go in other. Edit nothing.",
+].join('\n')
+
 const SHIP = {
   type: 'object',
   properties: { prUrl: { type: 'string' }, linearCommented: { type: 'boolean' }, progressSaved: { type: 'boolean' }, notes: { type: 'string' } },
@@ -339,6 +346,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     () => agent(task, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
     () => agent(task, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
     () => agent(`Mode: verify. ${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
+    () => agent(GREPTILE_TASK({ dir: WT, base: next.baseBranch.replace(/^origin\//, '') }), { label: `greptile r${round}`, phase: 'Review', schema: REVIEW }),
   ]
   if (next.touchesWeb) {
     reviewers.push(() => agent(task, { label: `ui r${round}`, phase: 'Review', agentType: 'my-factory:ui-reviewer', schema: REVIEW }))

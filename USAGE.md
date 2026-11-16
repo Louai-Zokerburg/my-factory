@@ -15,7 +15,7 @@ Lost? Type **`factory help`** in a Claude session in `~/work/activepieces`. The 
  2. Recipe (background workflow)     refuses to start without a grilled plan
     ├─ build in a fresh worktree      (Chrome DevTools as its eyes)
     ├─ verify in the running app      app lock → ap-dev up → Playwright spec + DevTools → ap-dev stop
-    ├─ review: security · quality · tests (+ ui)   up to 2 fix rounds
+    ├─ review: security · quality · tests · Greptile (+ ui)   up to 2 fix rounds
     └─ ship: draft PR with a Proof section, Linear comment
    │
    ▼
@@ -63,6 +63,7 @@ Keep two or three runs going at most: they share one app through the lock, and e
 - **`needs-human`:** a must-fix survived 2 rounds; it lists what's left.
 - **Stuck waiting for the app lock:** `bash scripts/app-lock.sh status`. A lock older than 45 minutes is taken over automatically.
 - **A reviewer is wrong:** say why in the session; the next round skips it.
+- **Greptile notes say "blocked":** it did not run (signed out, no credits) and the run went on without it. Check `greptile whoami`.
 
 ## Change the factory
 

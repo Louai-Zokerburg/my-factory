@@ -44,7 +44,7 @@ async function run(name, args, opts, expect) {
     const l = o.label
     calls.push(l)
     if (l.startsWith('sort')) return l.includes('b.ts') ? { kind: 'clear-fix', reasoning: '', change: 'rename', draftReply: 'Fixed' } : { kind: 'question', reasoning: '', change: '', draftReply: 'Because' }
-    if (/^(security|quality|tests|ui)( r\d)?$/.test(l)) {
+    if (/^(security|quality|tests|ui|greptile)( r\d)?$/.test(l)) {
       reviews++
       const bad = opts.badOnce && reviews === 1
       return { verdict: bad ? 'fail' : 'pass', mustFix: bad ? [{ file: 'x', where: 'x', line: 1, problem: 'p', fix: 'f' }] : [], other: [], screenshots: l.startsWith('ui') ? ['s.png'] : undefined, securityImpact: l.startsWith('security') ? 'no' : undefined }
@@ -74,7 +74,7 @@ async function run(name, args, opts, expect) {
 
 const locatedFirst = (calls) => calls[0] === 'locate'
 const cases = [
-  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { check: locatedFirst }, 'done'],
+  ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { check: (c) => locatedFirst(c) && c.includes('greptile r1') }, 'done'],
   ['small-bug', { planPath: '/p.md', ticket: 'ENG-1', repo: '/r' }, { check: (c) => !c.includes('locate') }, 'done'],
   ['small-bug', { planPath: '/p.md', ticket: 'ENG-1' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
   ['small-bug', { planPath: '/p.md', ticket: 'ENG-1', dryRun: true }, {}, 'dry-run-complete'],
@@ -87,16 +87,16 @@ const cases = [
   ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1' }, { badPlan: true, check: (c) => !c.includes('read ticket') }, 'blocked'],
   ['small-bug', 'ENG-1', {}, 'blocked'],
   ['colleague-review', { planPath: '/p.md', pr: 'https://github.com/x/y/pull/17339' }, { check: (c, r) => r.pr === '17339' && !c.includes('push') }, 'done'],
-  ['colleague-review', { planPath: '/p.md', pr: 17339, push: true }, { check: (c) => c.includes('push') }, 'done'],
+  ['colleague-review', { planPath: '/p.md', pr: 17339, push: true }, { check: (c) => c.includes('greptile') && c.indexOf('greptile') < c.indexOf('push') }, 'done'],
   ['colleague-review', { planPath: '/p.md', }, {}, 'blocked'],
   ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1' }, {}, 'done'],
   ['support-ticket', { planPath: '/p.md', ticket: 'GIT-1', fix: true, dryRun: true }, { check: (c) => c.includes('WF:my-factory:small-bug') }, 'done'],
   ['ui-update', { planPath: '/p.md', ticket: 'AI-9', dryRun: true }, {}, 'dry-run-complete'],
-  ['ui-update', { planPath: '/p.md', description: 'make chips bigger' }, { badOnce: true, check: (c) => c.includes('address r1') }, 'done'],
+  ['ui-update', { planPath: '/p.md', description: 'make chips bigger' }, { badOnce: true, check: (c) => c.includes('address r1') && c.includes('greptile r2') }, 'done'],
   ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { check: (c, r) => r.nextActions.length === 3 && r.masterPlan === '/plans/f/master-plan.md' }, 'awaiting-approval'],
   ['big-feature', { ticket: 'ENG-1', planPath: '/plans/f/brief.md' }, { fewQuestions: true, check: (c) => !c.some((l) => l.startsWith('research')) }, 'blocked'],
   ['big-feature', { ticket: 'ENG-1', stage: 'split', planPath: '/plans/f/master-plan.md' }, { check: (c, r) => !c.includes('plan check') && r.nextActions[2].includes('plan PR 1') }, 'awaiting-approval'],
-  ['big-feature', { ticket: 'ENG-1', stage: 'build', pr: 2, planPath: '/plans/f/pr-2-ui.md' }, { check: (c, r) => c.filter((l) => l.startsWith('build PR')).length === 1 && r.nextActions.length >= 2 }, 'done'],
+  ['big-feature', { ticket: 'ENG-1', stage: 'build', pr: 2, planPath: '/plans/f/pr-2-ui.md' }, { check: (c, r) => c.filter((l) => l.startsWith('build PR')).length === 1 && c.includes('greptile r1') && r.nextActions.length >= 2 }, 'done'],
   ['big-feature', { ticket: 'ENG-1', stage: 'build', planPath: '/plans/f/pr-2-ui.md' }, { check: (c) => c.length === 0 }, 'blocked'],
   ['big-feature', { ticket: 'ENG-1', stage: 'plan' }, { check: (c) => c.length === 0 }, 'blocked'],
   ['big-feature', { ticket: 'ENG-1', stage: 'ship', planPath: '/x' }, {}, 'blocked'],

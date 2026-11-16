@@ -7,7 +7,7 @@ export const meta = {
     { title: 'Setup', detail: 'fresh worktree and branch off origin/main' },
     { title: 'Reproduce', detail: 'test-verifier writes a test that fails because of the bug' },
     { title: 'Fix', detail: 'smallest change that makes the test pass' },
-    { title: 'Review', detail: 'security, quality and test-verifier in parallel; fix and re-review' },
+    { title: 'Review', detail: 'security, quality, test-verifier and Greptile in parallel; fix and re-review' },
     { title: 'Ship', detail: 'push, draft PR, Linear write-back' },
   ],
 }
@@ -149,6 +149,13 @@ const REVIEW = {
   required: ['verdict', 'mustFix', 'other'],
 }
 
+const GREPTILE_TASK = ({ dir, base }) => [
+  `Run Greptile, the AI reviewer that also reviews our PRs in CI, on the committed changes in ${dir} before anything is pushed.`,
+  `Command: \`cd ${dir} && greptile review ${base ? `-b ${base} ` : ''}--agent\`. It takes several minutes: start it with run_in_background, wait for the completion notification, never cut it short.`,
+  'If it exits nonzero or says it is not signed in, return verdict "blocked", an empty mustFix, and the error in other.',
+  "Otherwise check every finding against the code. Real bugs, security problems and broken behaviour go in mustFix (file, line, problem, Greptile's suggested fix). Style, nits, and findings you disproved (with why) go in other. Edit nothing.",
+].join('\n')
+
 const SHIP = {
   type: 'object',
   properties: { prUrl: { type: 'string' }, linearCommented: { type: 'boolean' }, notes: { type: 'string' } },
@@ -263,6 +270,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     () => agent(reviewTask, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
     () => agent(reviewTask, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
     () => agent(`Mode: verify. ${reviewTask}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
+    () => agent(GREPTILE_TASK({ dir: WT }), { label: `greptile r${round}`, phase: 'Review', schema: REVIEW }),
   ])).filter(Boolean)
   mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]
   log(`Review round ${round}: ${mustFix.length} must-fix`)
