@@ -20,6 +20,7 @@ const NEXT_STEPS = {
 }
 const DRY_RUN = Boolean(input.dryRun)
 const MAX_REVIEW_ROUNDS = 2
+const RECHECK = (round) => (round > 1 ? 'Round ' + round + ' recheck: run only the tests and typechecks for files the last commit changed (`git diff HEAD~1 --name-only`). If it changed no code (only docs, brain or plan files), report pass without running anything. ' : '')
 
 if (!input.ticket && !input.description) {
   return { status: 'blocked', reason: 'Pass args.ticket (e.g. "AI-123") and/or args.description.', nextActions: NEXT_STEPS.blocked }
@@ -245,7 +246,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
     () => agent(`${task} Capture before (origin/main) and after screenshots with the pr-screenshots skill and list their paths in screenshots.`, { label: `ui r${round}`, phase: 'Review', agentType: 'my-factory:ui-reviewer', schema: REVIEW }),
     () => agent(task, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
     () => agent(task, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
-    () => agent(`Mode: verify. ${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
+    () => agent(`Mode: verify. ${RECHECK(round)}${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
     () => agent(GREPTILE_TASK({ dir: WT }), { label: `greptile r${round}`, phase: 'Review', schema: REVIEW }),
   ])).filter(Boolean)
   mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]

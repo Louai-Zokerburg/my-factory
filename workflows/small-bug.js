@@ -21,6 +21,7 @@ const NEXT_STEPS = {
 }
 const DRY_RUN = Boolean(input.dryRun)
 const MAX_REVIEW_ROUNDS = 2
+const RECHECK = (round) => (round > 1 ? 'Round ' + round + ' recheck: run only the tests and typechecks for files the last commit changed (`git diff HEAD~1 --name-only`). If it changed no code (only docs, brain or plan files), report pass without running anything. ' : '')
 
 if (!input.ticket && !input.description) {
   return { status: 'blocked', reason: 'Pass args.ticket (e.g. "ENG-123") or args.description.', nextActions: NEXT_STEPS.blocked }
@@ -224,7 +225,7 @@ let fix = await agent(
     `Fix this bug with the smallest correct change. ${WORKDIR_NOTE(WT)}`,
     bugBrief,
     `A failing test already proves it: ${repro.testPath}. Run it with: ${repro.command}`,
-    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev` and the typecheck of each touched package (for web: `cd packages/web && npm run typecheck`, which also checks test files), then commit with a conventional message (e.g. `fix(api): ...`). Return the commit hash.',
+    'Change source code only; do not weaken or delete the test. Make the test pass, run `npm run lint-dev` and the typecheck of each touched package except `packages/web` (never typecheck or build web locally: over 10 minutes, CI runs it), then commit with a conventional message (e.g. `fix(api): ...`). Return the commit hash.',
   ].join('\n\n'),
   { label: 'fix', schema: FIX },
 )
@@ -269,7 +270,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
   reviews = (await parallel([
     () => agent(reviewTask, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
     () => agent(reviewTask, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
-    () => agent(`Mode: verify. ${reviewTask}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
+    () => agent(`Mode: verify. ${RECHECK(round)}${reviewTask}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
     () => agent(GREPTILE_TASK({ dir: WT }), { label: `greptile r${round}`, phase: 'Review', schema: REVIEW }),
   ])).filter(Boolean)
   mustFix = [...reviews.flatMap((r) => r.mustFix), ...appFix()]

@@ -25,6 +25,7 @@ const PLAN_PATH = String(input.planPath || '')
 const PR_N = Number(input.pr || 0)
 const MIN_QUESTIONS = STAGE === 'plan' ? 30 : 5
 const MAX_REVIEW_ROUNDS = 2
+const RECHECK = (round) => (round > 1 ? 'Round ' + round + ' recheck: run only the tests and typechecks for files the last commit changed (`git diff HEAD~1 --name-only`). If it changed no code (only docs, brain or plan files), report pass without running anything. ' : '')
 
 if (!TICKET) {
   return { status: 'blocked', reason: 'Pass args.ticket (e.g. "ENG-1401") and args.stage ("plan" | "split" | "build").', nextActions: NEXT_STEPS.blocked }
@@ -298,7 +299,7 @@ let build = await agent(
     `2. ${AT(wtPath)} Read ${PLAN_PATH} first (Louai's answers for this PR), then ${FDIR}/master-plan.md (Decisions) and ${FDIR}/ledger.md for what earlier PRs did. Mark PR${next.n} \`building\` in the ledger. ${STAMP}`,
     `Scope: ${next.scope}`,
     `Acceptance criteria for this PR: ${next.acceptanceCriteria.join('; ')}`,
-    '3. Implement only this scope. Write the tests each criterion names (unit, API, or the E2E test title it names, per `packages/tests-e2e/README.md`). Run them and `npm run lint-dev`.',
+    '3. Implement only this scope. Write the tests each criterion names (unit, API, or the E2E test title it names, per `packages/tests-e2e/README.md`). Run them and `npm run lint-dev`. Do not typecheck or build `packages/web` (over 10 minutes, the shell kills it; CI covers web types).',
     '4. Commit with a conventional message, no Co-Authored-By trailer. Do not push.',
   ].join('\n\n'),
   { label: `build PR${next.n}`, schema: BUILD },
@@ -345,7 +346,7 @@ for (let round = 1; round <= MAX_REVIEW_ROUNDS; round++) {
   const reviewers = [
     () => agent(task, { label: `security r${round}`, phase: 'Review', agentType: 'my-factory:security-reviewer', schema: REVIEW }),
     () => agent(task, { label: `quality r${round}`, phase: 'Review', agentType: 'my-factory:quality-reviewer', schema: REVIEW }),
-    () => agent(`Mode: verify. ${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
+    () => agent(`Mode: verify. ${RECHECK(round)}${task}`, { label: `tests r${round}`, phase: 'Review', agentType: 'my-factory:test-verifier', schema: REVIEW }),
     () => agent(GREPTILE_TASK({ dir: WT, baseRef: `origin/${next.baseBranch.replace(/^origin\//, '')}` }), { label: `greptile r${round}`, phase: 'Review', schema: REVIEW }),
   ]
   if (next.touchesWeb) {

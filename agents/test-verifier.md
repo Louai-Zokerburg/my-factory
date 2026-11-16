@@ -26,12 +26,14 @@ The caller says which. If unclear, use **verify**.
    - server API: `setupTestEnvironment()` + `createTestContext(app)`; run the narrowest matching `npm run test-api` / package test command.
    - engine and shared: `npm run test-unit` filtered to the package.
 3. If the caller gave Linear acceptance criteria, check each bullet ends with ``E2E: `<test title>` `` or `no-e2e: <reason>`, and that each named E2E test exists.
-4. Run the narrowest test commands that cover the change, then `npm run lint-dev`, then the typecheck of every touched package, **test files included**: vitest does not typecheck, but CI does. For `packages/web` that is `cd packages/web && npm run typecheck` (both `tsconfig.app.json` and `tsconfig.spec.json`); it needs the internal packages built first (`npx turbo run build --filter=web^... --output-logs=errors-only`), or every file fails with unrelated errors.
+4. Run the narrowest test commands that cover the change, then `npm run lint-dev`, then typecheck each touched package **except `packages/web`**, test files included (vitest does not typecheck): from the package, `npx tsc --noEmit -p tsconfig.app.json` and `-p tsconfig.spec.json` when they exist (about 1 minute each). **Never typecheck or build `packages/web` locally** (`npm run typecheck` there, `turbo run build --filter=web^...`): it takes over 10 minutes, the shell kills it at 10, and CI runs it on push. Report web as `Typecheck: ci`.
+4a. Never start a command that can run past 10 minutes; the shell kills it and the wait is lost.
 5. If a needed service (Postgres, Redis) is missing, say so; do not fake a pass.
 6. In a fresh checkout (cloud session or new worktree), install and build the internal packages before the first test, or every API test fails with `Failed to resolve entry for package "@activepieces/..."`: `bun install --frozen-lockfile && npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only` (about 40 s).
 
 **verify-app** (prove it in the running app; the caller gives the checkout, edition, criteria, pages, factory path and a run id):
 1. Take the app lock: `bash <factory>/scripts/app-lock.sh acquire <run id>`. It waits while another run holds it. Run `... touch <run id>` every ~10 minutes of work.
+Do not run lint, typecheck or `turbo run build` in this mode: the review's tests agent does those, and `ap-dev up` builds what the app needs.
 2. Boot from the checkout: `cd <checkout> && ap-dev up <edition> --detach --replace` (add `--pieces=a,b` when a spec needs pieces; the first boot in a fresh worktree installs deps and can take 10+ minutes). Then `ap-dev wait`. After every code or test edit, run `ap-dev wait` again before re-testing.
 3. **Proof that stays:** for each acceptance criterion with ``E2E: `<title>` ``, make sure that Playwright spec exists in `packages/tests-e2e` (write it per its README if missing) and run it:
    `E2E_INSTANCE_URL=http://localhost:4200 E2E_EMAIL=dev@ap.com E2E_PASSWORD=12345678 npx playwright test --config=packages/tests-e2e/playwright.config.ts <spec> --reporter=line`
@@ -49,7 +51,7 @@ Tests added: <paths or "none">
 Commands run:
 - <command> → <pass | fail: first failing line>
 Lint: <pass | fail: first error>
-Typecheck: <pass | fail: first error | n/a>
+Typecheck: <pass | fail: first error | ci (web) | n/a>
 E2E markers: <ok | missing: which criteria | n/a>
 Uncovered behaviour: <what still has no test, or "none">
 ```
