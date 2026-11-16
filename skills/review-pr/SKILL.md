@@ -1,9 +1,9 @@
 ---
 name: review-pr
-description: Review a teammate's Activepieces pull request the way Louai does - four reviewer agents in parallel, check the serious claims yourself, then draft one friendly review with Blockers and Non-blockers and post it only after a yes. Use ONLY when Louai says "factory review-pr <n>", "factory review PR <n>" or /my-factory:review-pr. A plain "review this PR" is normal work: do not load this skill for it.
+description: Review an Activepieces pull request the way Louai does - four reviewer agents in parallel, check the serious claims yourself. A teammate's PR gets one friendly draft review, posted only after a yes; Louai's own PR gets the verified findings applied, committed and pushed. Use ONLY when Louai says "factory review-pr <n>", "factory review PR <n>" or /my-factory:review-pr. A plain "review this PR" is normal work: do not load this skill for it.
 ---
 
-# Review a teammate's PR
+# Review a PR
 
 ## 0. Plan first
 
@@ -13,6 +13,7 @@ This skill runs after the plan session (`factory review-pr <n>`), which writes `
 
 - `gh api repos/activepieces/activepieces/pulls/<n>` for title, author, base branch and size, plus `.../pulls/<n>/files` and the body. Use `gh api` with a `timeout`; `gh pr view` can hang.
 - The base branch is often **not** `main` (stacked PRs). Always diff against the PR's own base.
+- **Whose PR?** If the author is `Louai-Zokerburg` (`gh api user --jq .login`), this is **own-PR mode**: steps 2–4 change as noted, step 5 is replaced by "5b. Apply, commit, push", and nothing is posted on GitHub. Anyone else: teammate mode, as written.
 
 ## 2. Check it out
 
@@ -22,6 +23,8 @@ git worktree add --detach <repo>-wt/review-pr-<n> origin/<head>
 cd <repo>-wt/review-pr-<n> && bun install --frozen-lockfile \
   && npx turbo run build --filter=api^... --filter=worker^... --filter=worker --output-logs=errors-only
 ```
+
+Own-PR mode: check out the **branch**, not a detached head, so you can push. If `git worktree list` shows `<head>` already checked out and that checkout is clean and level with `origin/<head>`, work there. Otherwise `git worktree add -B <head> <repo>-wt/review-pr-<n> origin/<head>`. A dirty checkout or a local branch ahead of origin: stop and ask.
 
 ## 3. Four reviewers in parallel
 
@@ -35,7 +38,18 @@ Start these at once, each pointed at the worktree and `git diff origin/<base>...
 
 Reviewers overstate. Before anything goes in the review, check every blocker and every surprising claim yourself in the code: open the file, read the lines, follow the call. Drop or downgrade what doesn't hold. Tell Louai which claims you corrected.
 
-## 5. Draft, show, post
+## 5b. Own PR: apply, commit, push
+
+Instead of step 5, when the PR is Louai's:
+1. Apply every blocker and non-blocker that survived step 4. Skip one only when it is a judgment call (design change, scope growth, disagrees with the plan) and list it as skipped with a one-line reason.
+2. Run eslint on the touched packages and the tests that cover the changed code. A failure you caused: fix it or revert that change.
+3. Commit on the PR branch: one commit, lowercase conventional subject ≤100 chars (`fix(<area>): address review findings`), body = one line per applied finding. No `Co-Authored-By` trailer.
+4. `git push --no-verify origin HEAD:<head>`. Never force-push; if the push is rejected, stop and say so.
+5. Tell Louai: the commit SHA, applied findings, skipped findings with reasons, what ran and its result. Skip step 6 when you used his existing checkout.
+
+If the plan says "don't push", stop after the commit.
+
+## 5. Draft, show, post (teammate mode)
 
 Show the draft to Louai first. Post only after a yes, with `gh api -X POST repos/activepieces/activepieces/pulls/<n>/reviews` (`commit_id` = PR head SHA, `event` = `REQUEST_CHANGES` if there are blockers, otherwise `COMMENT`). Put an inline comment on each blocker whose line is inside the diff; GitHub rejects inline comments on lines the PR didn't touch, so mention those in the body.
 

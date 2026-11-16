@@ -32,6 +32,7 @@ Nothing is merged or posted without you.
 | Cause unknown | `factory support-ticket GIT-1234` | 7+ | Draft ticket reply (reproduced in the app); `fix` chains into small-bug |
 | Comments on your PR | `factory colleague-review PR 17339` | 5+ | Local fix commit + draft replies |
 | Review a teammate's PR | `factory review-pr 14895` | 5+ | Draft review, posted on your yes |
+| Review your own PR | `factory review-pr <yours>` | 5+ | Findings applied, committed, pushed |
 | UI change | `factory ui-update AI-200` | 5+ | Draft PR + screenshot gallery |
 | Big feature | `factory big-feature ENG-1401` | 30+ | `master-plan.md` |
 | … then | `factory big-feature ENG-1401 stage split` | – | `ledger.md` + one `pr-N` stub per PR |

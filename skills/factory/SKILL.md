@@ -18,7 +18,8 @@ Pick one recipe, say why in one line, show the exact `factory ...` line, and ask
 - A small bug in an existing feature → small-bug
 - A ticket whose cause is unknown → support-ticket
 - Comments on Louai's own PR → colleague-review
-- Someone else's PR → review-pr
+- Someone else's PR → review-pr (draft review)
+- Review Louai's own PR before others do → review-pr (fixes committed and pushed)
 - A visual change in packages/web → ui-update
 - More than one PR of work → big-feature
 
