@@ -13,15 +13,8 @@ Load the `plan-session` skill and follow it. Every recipe starts there: it grill
 ## "factory help" / "what can it do"
 Reply with the "What to type" table from USAGE.md, unchanged, and one line: "Tell me the ticket or PR and I'll pick the recipe."
 
-## Louai describes a task and says "factory"
-Pick one recipe, say why in one line, show the exact `factory ...` line, and ask "Start the plan session?":
-- A small bug in an existing feature → small-bug
-- A ticket whose cause is unknown → support-ticket
-- Comments on Louai's own PR → colleague-review
-- Someone else's PR → review-pr (draft review)
-- Review Louai's own PR before others do → review-pr (fixes committed and pushed)
-- A visual change in packages/web → ui-update
-- More than one PR of work → big-feature
+## Louai describes a task and says "factory" (no recipe named)
+Load the `pick` skill and follow it.
 
 ## "factory status"
 1. List `${CLAUDE_PLUGIN_ROOT}/agents`, `workflows`, `skills` and `scripts`.

@@ -37,6 +37,7 @@ Nothing is merged or posted without you.
 | Big feature | `factory big-feature ENG-1401` | 30+ | `master-plan.md` |
 | … then | `factory big-feature ENG-1401 stage split` | – | `ledger.md` + one `pr-N` stub per PR |
 | … then, per PR | `factory big-feature ENG-1401 plan PR 1` | 5+ | One draft PR, ledger ticked, stop |
+| Not sure which | `factory pick <ticket, PR or sentence>` | 0–1 | The recipe + its `factory …` line |
 | Status | `factory status` | – | Version, app lock, running stack |
 
 Add `dryRun: true` when you say "go" to stop before anything is pushed. The AI digest still runs on its own on Fridays.
